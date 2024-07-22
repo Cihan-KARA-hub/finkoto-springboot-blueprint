@@ -5,4 +5,4 @@ WORKDIR /blueprint
 COPY . .
 RUN mvn clean install
 
-CMD mvn spring-boot:run
+CMD mvn spring-boot:git initrun
