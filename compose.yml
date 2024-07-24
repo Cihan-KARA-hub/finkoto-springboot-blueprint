@@ -1,39 +1,45 @@
+version: '3.7'
 
 services:
-  postgresdb:
-    image: postgres
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      - POSTGRES_USER=${POSTGRESDB_USER}
-      - POSTGRES_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
-      - POSTGRES_DB=${POSTGRESDB_DATABASE}
-    ports:
-      - ${POSTGRESDB_LOCAL_PORT}:${POSTGRESDB_DOCKER_PORT}
+  postgres:
+    image: postgres:16.2
     volumes:
-      - db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - keycloak_network
 
-  app:
-    depends_on:
-      - postgresdb
-    build: ../BluePrint
-    restart: on-failure
-    env_file: .env
-    ports:
-      - ${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.6
+    command: start
     environment:
-      SPRING_APPLICATION_JSON: >-
-        {
-          "spring.datasource.url": "jdbc:postgresql://postgresdb:${POSTGRESDB_DOCKER_PORT}/${POSTGRESDB_DATABASE}",
-          "spring.datasource.username": "${POSTGRESDB_USER}",
-          "spring.datasource.password": "${POSTGRESDB_ROOT_PASSWORD}",
-          "spring.jpa.properties.hibernate.dialect": "org.hibernate.dialect.PostgreSQLDialect",
-          "spring.jpa.hibernate.ddl-auto": "update"
-        }
-    volumes:
-      - .m2:/root/.m2
-    stdin_open: true
-    tty: true
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT_BACKCHANNEL: false
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - 8080:8080
+    restart: always
+    depends_on:
+      - postgres
+    networks:
+      - keycloak_network
 
 volumes:
-  db:
+  postgres_data:
+    driver: local
+
+networks:
+  keycloak_network:
+    driver: bridge
