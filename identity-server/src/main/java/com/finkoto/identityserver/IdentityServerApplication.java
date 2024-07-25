@@ -8,7 +8,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class IdentityServerApplication  {
 
     public static void main(String[] args) {
-        SpringApplication.run(IdentityServerApplication.class, args);
+       try {
+           SpringApplication.run(IdentityServerApplication.class, args);
+       }
+       catch (Exception e) {
+           e.printStackTrace();
+       }
     }
 
 }

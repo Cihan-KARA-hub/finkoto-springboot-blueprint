@@ -1,26 +1,27 @@
 spring:
+  application:
+    name: identity-server
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8085/}
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/cihan/protocol/openid-connect/certs
-          #jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}
-  datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+          jwk-set-uri: http://localhost:8080/realms/master/protocol/openid-connect/certs
+
+
   main:
     web-application-type: none
 
-server:
-  port: ${SPRING_LOCAL_PORT}
 
+# Keycloak Ayarları
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: master
+  resource: admin-cli
+  ssl-required: none
+  token-uri: http://localhost:8080/realms/master/protocol/openid-connect/token
+  client-id: admin-cli
 
 
