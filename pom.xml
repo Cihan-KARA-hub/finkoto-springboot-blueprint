@@ -6,7 +6,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.2</version>
-
     </parent>
     <groupId>com.finkoto</groupId>
     <artifactId>spring-microservices-blueprint</artifactId>
@@ -21,6 +20,8 @@
 
    <modules>
        <module>config-server</module>
+       <module>discovery-server</module>
+       <module>identity-server</module>
 
    </modules>
     <dependencyManagement>
@@ -33,6 +34,15 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>1.18.34</version>
+                    <scope>provided</scope>
+                </dependency>
+
         </dependencies>
     </dependencyManagement>
+
 </project>

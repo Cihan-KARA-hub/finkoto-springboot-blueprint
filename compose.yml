@@ -29,7 +29,7 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
-      - 8080:8080
+      - "8180:8080"
     restart: unless-stopped
     depends_on:
       - postgres

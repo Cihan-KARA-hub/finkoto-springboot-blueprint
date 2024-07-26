@@ -4,24 +4,3 @@ spring:
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8085/}
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:8080/realms/master/protocol/openid-connect/certs
-
-
-  main:
-    web-application-type: none
-
-
-# Keycloak Ayarları
-keycloak:
-  auth-server-url: http://localhost:8080
-  realm: master
-  resource: admin-cli
-  ssl-required: none
-  token-uri: http://localhost:8080/realms/master/protocol/openid-connect/token
-  client-id: admin-cli
-
-

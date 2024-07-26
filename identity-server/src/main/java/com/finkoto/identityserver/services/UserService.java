@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Service
 public class UserService {
-
+//feign client üzerinden  token al
     @Value("${keycloak.token-uri}")
     private String tokenUri;
 
