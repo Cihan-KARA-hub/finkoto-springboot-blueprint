@@ -3,11 +3,8 @@ package com.finkoto.identityserver.controller;
 
 
 import com.finkoto.identityserver.dto.CreateTokenDto;
-import com.finkoto.identityserver.dto.TokenResponseDto;
 import com.finkoto.identityserver.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,17 +13,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 @RestController
 public class UserController {
-    @Autowired
-    private UserService service;
 
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
     @PostMapping("/token")
-    public ResponseEntity<TokenResponseDto> createToken(@RequestBody CreateTokenDto dto) {
-        TokenResponseDto tokenResponse = service.createToken(dto);
+    public ResponseEntity<String> createToken(@RequestBody CreateTokenDto dto) {
+        String tokenResponse = service.getToken(dto.getUserName(), dto.getPassword());
         return ResponseEntity.ok(tokenResponse);
     }
     @GetMapping("/authenticated")
-
     public String authenticated() {
+
         return "authenticated";
     }
 

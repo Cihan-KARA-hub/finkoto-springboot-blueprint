@@ -7,10 +7,11 @@ spring:
 
 # Keycloak Ayarları
 keycloak:
-  auth-server-url: http://localhost:8080
+  auth-server-url: http://localhost:8180
   realm: master
   resource: admin-cli
   ssl-required: none
-  token-uri: http://localhost:8080/realms/master/protocol/openid-connect/token
-  client-id: admin-cli
+  token-uri: http://localhost:8180/realms/master/protocol/openid-connect/token
+  client-secret: y3zd3DSaYxec0oZdApPVb5JsNgPGDnJy
+  client-id: blueprint-springboot
 

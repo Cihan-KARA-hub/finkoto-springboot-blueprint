@@ -1,37 +1,54 @@
 package com.finkoto.identityserver.services;
 
 
+import com.finkoto.identityserver.client.KeycloakAdminClient;
 import com.finkoto.identityserver.dto.CreateTokenDto;
 import com.finkoto.identityserver.dto.TokenResponseDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 
 @Service
 public class UserService {
-//feign client üzerinden  token al
+
     @Value("${keycloak.token-uri}")
     private String tokenUri;
 
     @Value("${keycloak.client-id}")
     private String clientId;
 
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
 
 
-    public TokenResponseDto createToken(CreateTokenDto dto) {
+    public String getToken(String username, String password) {
         RestTemplate restTemplate = new RestTemplate();
-        Map<String, String> params = new HashMap<>();
-        params.put("username", dto.getUserName());
-        params.put("password", dto.getPassword());
-        params.put("grant_type", "password");
-        params.put("client_id", clientId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("username", username);
+        body.add("password", password);
+        body.add("grant_type", "password");
 
-        TokenResponseDto response = restTemplate.postForObject(tokenUri, params, TokenResponseDto.class);
-        return response;
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(tokenUri, HttpMethod.POST, entity, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody().get("access_token").toString();
+        } else {
+            throw new RuntimeException("Failed to retrieve token");
+        }
     }
-
 }
