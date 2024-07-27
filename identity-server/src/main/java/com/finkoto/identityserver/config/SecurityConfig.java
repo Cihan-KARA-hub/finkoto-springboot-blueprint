@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableWebSecurity
@@ -42,7 +43,8 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
     @Bean
-    Logger.Level feignLoggerLevel() {
-        return Logger.Level.FULL; // Detaylı loglama
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
+
 }

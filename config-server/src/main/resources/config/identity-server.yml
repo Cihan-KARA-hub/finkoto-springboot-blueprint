@@ -5,6 +5,7 @@ spring:
         jwt:
           jwk-set-uri: http://localhost:8180/realms/master/protocol/openid-connect/certs
 
+
 # Keycloak Ayarları
 keycloak:
   auth-server-url: http://localhost:8180
@@ -12,6 +13,9 @@ keycloak:
   resource: admin-cli
   ssl-required: none
   token-uri: http://localhost:8180/realms/master/protocol/openid-connect/token
+  users-uri: http://localhost:8180/admin/realms/master/users
   client-secret: y3zd3DSaYxec0oZdApPVb5JsNgPGDnJy
   client-id: blueprint-springboot
+  admin:
+    username= ${keycloak:admin:username}:
 
