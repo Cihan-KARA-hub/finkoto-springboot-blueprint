@@ -16,6 +16,6 @@ keycloak:
   users-uri: http://localhost:8180/admin/realms/master/users
   client-secret: y3zd3DSaYxec0oZdApPVb5JsNgPGDnJy
   client-id: blueprint-springboot
-  admin:
-    username= ${keycloak:admin:username}:
+  admin-username: cihan2
+  admin-password: 123456
 
