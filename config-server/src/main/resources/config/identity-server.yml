@@ -10,12 +10,12 @@ spring:
 keycloak:
   auth-server-url: http://localhost:8180
   realm: master
-  resource: admin-cli
+  resource: blueprint-springboot
   ssl-required: none
   token-uri: http://localhost:8180/realms/master/protocol/openid-connect/token
   users-uri: http://localhost:8180/admin/realms/master/users
   client-secret: y3zd3DSaYxec0oZdApPVb5JsNgPGDnJy
   client-id: blueprint-springboot
-  admin-username: cihan2
+  admin-username: admin
   admin-password: 123456
 

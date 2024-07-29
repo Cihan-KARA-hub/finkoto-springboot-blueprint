@@ -2,19 +2,17 @@ package com.finkoto.identityserver.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 
 @Getter
 @Setter
 @AllArgsConstructor
-public class UserResponseDto {
-    private String id;
+public class UserUpdateDto {
+
     private String username;
+    private String email;
     private String lastName;
     private String firstName;
     private boolean enabled;
-
 
 }
