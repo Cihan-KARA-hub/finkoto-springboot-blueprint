@@ -74,19 +74,54 @@ public class UserService {
         String accessToken = token.getAccessToken();
         return keycloakUserClient.getByIdUser(accessToken ,id);
     }
-    public CreateUserDto createUserDto(CreateUserDto createUserDto){
-        Map<String, String> body = new HashMap<>();
-        body.put("enabled", "true");
-        body.put("username",createUserDto.getUsername());
+
+    public void createUser(CreateUserDto createUserDto){
+        TokenResponseDto token = getToken(admin_username, admin_password);
+        String acessToken = token.getAccessToken();
+        Map<String, Object> body = new HashMap<>();
+        body.put("enabled", Boolean.parseBoolean(String.valueOf(createUserDto.isEnabled())));
+        body.put("username", createUserDto.getUsername());
         body.put("firstName", createUserDto.getFirstName());
         body.put("lastName", createUserDto.getLastName());
         body.put("email", createUserDto.getEmail());
-        return  keycloakAdminClient.createUser(body);
-
+        keycloakUserClient.createUser(body, acessToken);
     }
 
+    public void userDelete(String id) {
+        TokenResponseDto token = getToken(admin_username, admin_password);
+        String accessToken = token.getAccessToken();
+        keycloakUserClient.getByIdUser(accessToken, id);
+    }
 
+    public void updateUser(UserUpdateDto userUpdateDto, String id) {
+        TokenResponseDto token = getToken(admin_username, admin_password);
+        String accessToken = token.getAccessToken();
+        Map<String, Object> body = new HashMap<>();
+        body.put("enabled", Boolean.parseBoolean(String.valueOf(userUpdateDto.isEnabled())));
+        body.put("username", userUpdateDto.getUsername());
+        body.put("firstName", userUpdateDto.getFirstName());
+        body.put("lastName", userUpdateDto.getLastName());
+        body.put("email", userUpdateDto.getEmail());
 
+        // Logging to check if ID and body content are correct
+        System.out.println("Updating user with ID: " + id);
+        System.out.println("Request body: " + body);
+
+        keycloakUserClient.updateUser(body, accessToken, id);
+    }
+
+    public void  resetPassword(UserPasswordDto userPasswordDto,String id){
+        TokenResponseDto token =getToken(admin_username,admin_password);
+        String accessToken=token.getAccessToken();
+        Map<String, Object> body = new HashMap<>();
+        body.put("type",userPasswordDto.getType());
+        body.put("value",userPasswordDto.getValue());
+        body.put("temporary", Boolean.parseBoolean(String.valueOf(userPasswordDto.isTemporary())));
+
+        System.out.println("req "+userPasswordDto.getValue());
+
+        keycloakUserClient.resetPassword(accessToken,id,body);
+    }
 
 
 
