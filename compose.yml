@@ -34,7 +34,6 @@ services:
     depends_on:
       - postgres
 
-
 volumes:
   postgres_data:
     driver: local

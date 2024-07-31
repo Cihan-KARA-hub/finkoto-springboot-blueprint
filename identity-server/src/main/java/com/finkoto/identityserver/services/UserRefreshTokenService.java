@@ -1,11 +1,10 @@
 package com.finkoto.identityserver.services;
 
+
+import com.finkoto.identityserver.api.dto.*;
 import com.finkoto.identityserver.api.client.KeycloakAdminClient;
 import com.finkoto.identityserver.api.client.KeycloakUserClient;
-import com.finkoto.identityserver.api.dto.*;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 @RequiredArgsConstructor
 @Service
-public class UserService {
-
-
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+public class UserRefreshTokenService {
     private final KeycloakUserClient keycloakUserClient;
     private final KeycloakAdminClient keycloakAdminClient;
     @Value("${keycloak.admin-username}")
@@ -32,6 +29,7 @@ public class UserService {
         body.put("username", admin_username);
         body.put("password", admin_password);
         body.put("grant_type", "password");
+
         return keycloakUserClient.token(body);
     }
 
@@ -46,35 +44,36 @@ public class UserService {
 
     public List<UserResponseDto> getAllUsers() {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        return keycloakAdminClient.getAllUsers(token.getBearerToken());
+        return keycloakAdminClient.getAllUsers(token.getRefreshToken());
     }
 
     public UserResponseDto getByIdUser(String id) {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        return keycloakUserClient.getByIdUser(token.getBearerToken(), id);
+        String accessToken = token.getRefreshToken();
+        return keycloakUserClient.getByIdUser(accessToken, id);
     }
 
     public void createUser(CreateUserDto createUserDto) {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        String accessToken = token.getBearerToken();
+        String acessToken = token.getRefreshToken();
         Map<String, Object> body = new HashMap<>();
         body.put("enabled", Boolean.parseBoolean(String.valueOf(createUserDto.isEnabled())));
         body.put("username", createUserDto.getUsername());
         body.put("firstName", createUserDto.getFirstName());
         body.put("lastName", createUserDto.getLastName());
         body.put("email", createUserDto.getEmail());
-        keycloakAdminClient.createUser(body, accessToken);
+        keycloakAdminClient.createUser(body, acessToken);
     }
 
     public void userDelete(String id) {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        String accessToken = token.getBearerToken();
+        String accessToken = token.getRefreshToken();
         keycloakAdminClient.deleteUser(accessToken, id);
     }
 
     public void updateUser(UserUpdateDto userUpdateDto, String id) {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        String accessToken = token.getBearerToken();
+        String accessToken = token.getRefreshToken();
         Map<String, Object> body = new HashMap<>();
         body.put("enabled", Boolean.parseBoolean(String.valueOf(userUpdateDto.isEnabled())));
         body.put("username", userUpdateDto.getUsername());
@@ -91,7 +90,7 @@ public class UserService {
 
     public void resetPassword(UserPasswordDto userPasswordDto, String id) {
         TokenResponseDto token = getToken(admin_username, admin_password);
-        String accessToken = token.getBearerToken();
+        String accessToken = token.getRefreshToken();
         Map<String, Object> body = new HashMap<>();
         body.put("type", userPasswordDto.getType());
         body.put("value", userPasswordDto.getValue());
@@ -101,6 +100,5 @@ public class UserService {
 
         keycloakAdminClient.resetPassword(accessToken, id, body);
     }
-
 
 }
