@@ -1,0 +1,9 @@
+server:
+  port: 8089
+  servlet:
+    context-path: /ocpp-mock
+spring:
+  application:
+    name: ocpp-mock-server
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8081/}
