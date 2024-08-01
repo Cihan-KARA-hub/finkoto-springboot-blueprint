@@ -22,6 +22,8 @@
        <module>config-server</module>
        <module>discovery-server</module>
        <module>identity-server</module>
+       <module>ocpp-mock-server</module>
+       <module>charge-station-server</module>
 
    </modules>
     <dependencyManagement>

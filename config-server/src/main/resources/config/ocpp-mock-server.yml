@@ -1,0 +1,3 @@
+
+websocket:
+  url: "${WEB_SOCKET_URL:localhost:8443}"

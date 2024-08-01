@@ -1,0 +1,34 @@
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        public-paths: /v1/users/user-token
+        jwt:
+          jwk-set-uri: http://localhost:8180/realms/dev/protocol/openid-connect/certs
+
+# Keycloak Ayarları
+keycloak:
+  auth-server-url: http://localhost:8180
+  realm: dev
+  resource: ev-csms
+  ssl-required: none
+  token-uri: http://localhost:8180/realms/dev/protocol/openid-connect/token
+  users-uri: http://localhost:8180/admin/realms/dev/users
+  client-secret: UomKzxrX1CVQ4ltCknsV9Gd5HWuzLNXK
+  client-id: ev-csms
+  admin-username: admin
+  admin-password: 123456
+
+springdoc:
+  version: '@springdoc.version@'
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+  oAuthFlow:
+    authorizationUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/auth
+    tokenUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
+
+websocket:
+  url: "${WEB_SOCKET_URL:localhost:8443}"
