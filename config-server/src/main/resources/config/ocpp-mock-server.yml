@@ -1,3 +1,4 @@
 
 websocket:
-  url: "${WEB_SOCKET_URL:localhost:8443}"
+  port: 8443
+  host: localhost

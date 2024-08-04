@@ -31,4 +31,4 @@ springdoc:
     tokenUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
 
 websocket:
-  url: "${WEB_SOCKET_URL:localhost:8443}"
+  url: "${WEB_SOCKET_URL:ws://localhost:8443}"

@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: your_name
+      changes:
+        - createTable:
+            tableName: charge_central
+            columns:
+              - column:
+                  name: charge_central_id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: country
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 2
+      author: your_name
+      changes:
+        - createTable:
+            tableName: charge_point
+            columns:
+              - column:
+                  name: charge_point_id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: connector
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: disable
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ocpp_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_station_id
+                  type: int
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 3
+      author: your_name
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: charge_point
+            baseColumnNames: charge_station_id
+            constraintName: fk_charge_station_id
+            referencedTableName: charge_central
+            referencedColumnNames: charge_central_id

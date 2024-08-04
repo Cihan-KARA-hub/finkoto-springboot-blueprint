@@ -13,37 +13,26 @@ import java.util.UUID;
 @Configuration
 @Getter
 @Slf4j
-public class ServerEventConfig {
-
+public class ServerEventConfig  {
     @Bean
     public ServerEvents createServerCoreImpl() {
         return getNewServerEventsImpl();
     }
-
     private ServerEvents getNewServerEventsImpl() {
         ServerEvents serverEvents = new ServerEvents() {
 
-            /**
-             * @param sessionInformation
-             * @param s
-             * @param bytes
-             * @throws AuthenticationException
-             */
             @Override
             public void authenticateSession(SessionInformation sessionInformation, String s, byte[] bytes) throws AuthenticationException {
-
             }
 
             @Override
             public void newSession(UUID sessionIndex, SessionInformation information) {
-
                 // sessionIndex is used to send messages.
                 System.out.println("New session " + sessionIndex + ": " + information.getIdentifier());
             }
 
             @Override
             public void lostSession(UUID sessionIndex) {
-
                 System.out.println("Session " + sessionIndex + " lost connection");
             }
         };

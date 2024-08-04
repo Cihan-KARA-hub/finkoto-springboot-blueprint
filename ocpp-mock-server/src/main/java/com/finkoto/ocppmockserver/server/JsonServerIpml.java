@@ -1,26 +1,33 @@
 package com.finkoto.ocppmockserver.server;
 
 
-import com.finkoto.ocppmockserver.config.ApplicationConfiguration;
 import eu.chargetime.ocpp.JSONServer;
 import eu.chargetime.ocpp.ServerEvents;
+import eu.chargetime.ocpp.feature.profile.ServerCoreProfile;
 import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
 @Slf4j
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JsonServerIpml {
     private  final ServerEvents serverEvents;
     private  final JSONServer server;
-    private final ApplicationConfiguration applicationConfiguration;
+    private final ServerCoreProfile serverCoreProfile;
+
+
+    @Value("${websocket.port}")
+    private Integer webSocketPort;
+    @Value("${websocket.host}")
+    private String webSocketHost;
 
     @PostConstruct
     public void startServer() throws Exception {
-        server.open("localhost", applicationConfiguration.getServerPort(), serverEvents);
+        server.open(webSocketHost,webSocketPort, serverEvents);
     }
 
 }
