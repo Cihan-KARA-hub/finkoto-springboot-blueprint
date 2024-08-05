@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  postgres:
+  keycloak-db:
     image: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -9,11 +9,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-     
     ports:
       - "5432:5432"
 
-  another_postgres:
+  charge-station-db:
     image: postgres
     volumes:
       - another_postgres_data:/var/lib/postgresql/data
@@ -23,7 +22,6 @@ services:
       POSTGRES_PASSWORD: ${ANOTHER_POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
-
 
   keycloak:
     image: quay.io/keycloak/keycloak
@@ -38,14 +36,14 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_URL: jdbc:postgresql://keycloak-db/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8180:8080"
     restart: unless-stopped
     depends_on:
-      - postgres
+      - keycloak-db
 
 
 volumes:

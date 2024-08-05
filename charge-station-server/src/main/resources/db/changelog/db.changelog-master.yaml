@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/db.changelog-chargestation.yaml
+  - include:
+      file: db/changelog/db.changelog-connector.yml
+  - include:
+      file: db/changelog/db.changelog-chargepoint.yml

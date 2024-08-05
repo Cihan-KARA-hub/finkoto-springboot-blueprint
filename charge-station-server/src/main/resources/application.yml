@@ -1,38 +1,9 @@
 server:
-  port: 8091
-
+  port: 8086
+  servlet:
+    context-path: /charge-station
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5433/charge
-    username: admin1
-    password: 123456
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    database: postgresql
-    open-in-view: false
-    generate-ddl: false
-
-  sql:
-    init:
-      platform: postgres
   application:
     name: charge-station-server
-
-websocket:
-  url: "${WEB_SOCKET_URL:ws://localhost:8443}"
-
-liquibase:
-  change-log: classpath:/db/changelog/db.changelog-master.yaml
-  default-schema: public
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8082/eureka/
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8081/}

@@ -18,14 +18,14 @@
         <spring-modulith.version>1.1.6</spring-modulith.version>
     </properties>
 
-   <modules>
-       <module>config-server</module>
-       <module>discovery-server</module>
-       <module>identity-server</module>
-       <module>ocpp-mock-server</module>
-       <module>charge-station-server</module>
+    <modules>
+        <module>config-server</module>
+        <module>discovery-server</module>
+        <module>identity-server</module>
+        <module>ocpp-mock-server</module>
+        <module>charge-station-server</module>
 
-   </modules>
+    </modules>
     <dependencyManagement>
         <dependencies>
             <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies -->
@@ -41,13 +41,17 @@
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>2.6.0</version>
             </dependency>
-                <dependency>
-                    <groupId>org.projectlombok</groupId>
-                    <artifactId>lombok</artifactId>
-                    <version>1.18.34</version>
-                    <scope>provided</scope>
-                </dependency>
-
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.34</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>1.5.5.Final</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
