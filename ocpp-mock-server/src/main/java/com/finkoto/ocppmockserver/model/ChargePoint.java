@@ -1,4 +1,4 @@
-package com.finkoto.chargestation.model;
+package com.finkoto.ocppmockserver.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,6 +12,7 @@ import org.hibernate.type.NumericBooleanConverter;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -80,4 +81,3 @@ public class ChargePoint {
         return ocppId.hashCode();
     }
 }
-

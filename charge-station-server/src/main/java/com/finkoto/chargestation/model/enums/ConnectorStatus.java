@@ -1,6 +1,6 @@
 package com.finkoto.chargestation.model.enums;
 
-public enum Status {
+public enum ConnectorStatus {
     Available,
     Preparing,
     Charging,

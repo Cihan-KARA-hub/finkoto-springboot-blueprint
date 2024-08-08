@@ -1,14 +1,5 @@
 databaseChangeLog:
-  - changeSet:
-      id: 2
-      author: cihan
-      changes:
-        - createIndex:
-            indexName: charge_point_id
-            tableName: connector
-            columns:
-              - column:
-                  name: charge_point_id
+
 
   - changeSet:
       id: 3
@@ -53,13 +44,12 @@ databaseChangeLog:
                   type: varchar(30)
               - column:
                   name: status
-                  type: varchar(50)
-                  defaultValue: NEW
+                  type: varchar(8)
                   constraints:
                     nullable: false
               - column:
                   name: reason
-                  type: varchar(50)
+                  type: varchar(16)
               - column:
                   name: begin_time
                   type: timestamp
@@ -84,3 +74,4 @@ databaseChangeLog:
               - column:
                   name: unplug_time
                   type: timestamp
+

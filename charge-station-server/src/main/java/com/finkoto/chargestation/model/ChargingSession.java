@@ -11,8 +11,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -24,8 +24,8 @@ import java.time.OffsetDateTime;
 public class ChargingSession {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false, insertable = false, unique = true)
     private Long id;
 
     @Version
@@ -34,11 +34,11 @@ public class ChargingSession {
 
     @CreatedDate
     @Column(name = "created", nullable = false)
-    private Timestamp created;
+    private OffsetDateTime created;
 
     @LastModifiedDate
     @Column(name = "updated", nullable = false)
-    private Timestamp updated;
+    private OffsetDateTime updated;
 
     @Column(name = "meter_start")
     private Integer meterStart;
@@ -85,7 +85,7 @@ public class ChargingSession {
     private OffsetDateTime unplugTime;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "connector_id")
+    @JoinColumn(name = "id")
     private Connector connector;
 
     @Override

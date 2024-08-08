@@ -1,9 +1,11 @@
 package com.finkoto.chargestation.services;
 
 
+import com.finkoto.chargestation.api.dto.ChargePointDto;
 import com.finkoto.chargestation.api.dto.ChargingSessionDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargingSessionMapper;
+import com.finkoto.chargestation.model.ChargePoint;
 import com.finkoto.chargestation.model.ChargingSession;
 import com.finkoto.chargestation.repository.ChargingSessionRepository;
 import jakarta.transaction.Transactional;
@@ -17,8 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ChargingSessionService {
-    private ChargingSessionRepository chargingSessionRepository;
-    private ChargingSessionMapper chargingSessionMapper;
+    private final ChargingSessionRepository chargingSessionRepository;
+    private final ChargingSessionMapper chargingSessionMapper;
 
     @Transactional
     public PageableResponseDto<ChargingSessionDto> getAll(Pageable pageable) {
@@ -33,9 +35,10 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public ChargingSessionDto create(ChargingSessionDto chargingSessionDto) {
-        final ChargingSession chargingSession = chargingSessionMapper.toEntity(chargingSessionDto);
-        return chargingSessionMapper.toDto(chargingSessionRepository.save(chargingSession));
+    public void create(ChargingSessionDto chargingSessionDto) {
+       ChargingSession newChargingsession = new ChargingSession();
+        chargingSessionMapper.toEntity(newChargingsession, chargingSessionDto);
+        chargingSessionRepository.save(newChargingsession);
     }
 
     @Transactional
@@ -45,8 +48,9 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public ChargingSession update(ChargingSessionDto chargingSessionDto) {
-        final ChargingSession session = chargingSessionMapper.toEntity(chargingSessionDto);
-        return chargingSessionRepository.save(session);
+    public void update(ChargingSessionDto chargingSessionDto) {
+        ChargingSession newChargingsession = new ChargingSession();
+        final ChargingSession session = chargingSessionMapper.toEntity(newChargingsession,chargingSessionDto);
+        chargingSessionMapper.toDto(chargingSessionRepository.save(session));
     }
 }

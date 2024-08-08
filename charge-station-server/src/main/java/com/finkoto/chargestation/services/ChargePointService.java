@@ -6,20 +6,22 @@ import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargePointMapper;
 import com.finkoto.chargestation.model.ChargePoint;
 import com.finkoto.chargestation.repository.ChargePointRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 
 @RequiredArgsConstructor
 @Service
 public class ChargePointService {
-    private ChargePointRepository chargePointRepository;
-    private ChargePointMapper chargePointMapper;
+    private final ChargePointRepository chargePointRepository;
+    private final ChargePointMapper chargePointMapper;
 
     @Transactional
     public PageableResponseDto<ChargePointDto> getAll(Pageable pageable) {
@@ -27,23 +29,56 @@ public class ChargePointService {
         final List<ChargePointDto> chargePointDtoList = chargePointMapper.toDto(pageData.getContent());
         return new PageableResponseDto<>(chargePointDtoList, pageData.getTotalElements(), pageable);
     }
+
+    @Transactional
+    public void create(ChargePointDto chargePointDto) {
+        final ChargePoint newChargePoint = new ChargePoint();
+        chargePointMapper.toEntity(newChargePoint, chargePointDto);
+        chargePointRepository.save(newChargePoint);
+    }
+
+    @Transactional
+    public ChargePointDto update(Long id, ChargePointDto chargePointDto) {
+        final ChargePoint chargePoint = chargePointRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id: " + id + " not found."));
+        chargePointMapper.toEntity(chargePoint, chargePointDto);
+        final ChargePoint updatedChargePoint = chargePointRepository.save(chargePoint);
+        return chargePointMapper.toDto(updatedChargePoint);
+    }
+
     @Transactional
     public void delete(Long id) {
         chargePointRepository.deleteById(id);
     }
-    @Transactional
-    public ChargePointDto create(ChargePointDto chargePointDto) {
-        return chargePointMapper.toDto(chargePointMapper.toEntity(chargePointDto));
-    }
+
     @Transactional
     public ChargePointDto findById(Long id) {
-        return chargePointMapper.toDto(chargePointRepository.findById(id).orElse(null));
+        return chargePointRepository.findById(id).map(chargePointMapper::toDto).orElse(null);
+    }
+
+    @Transactional
+    public void chargePointOnlineSet(String ocppId) {
+
+            ChargePoint optionalChargePoint = chargePointRepository.findByOcppId(ocppId);
+
+        if (optionalChargePoint != null) {
+
+            optionalChargePoint.setOnline(true);
+            optionalChargePoint.setLastConnected(OffsetDateTime.now());
+            optionalChargePoint.setLastDisconnected(null);
+
+            chargePointRepository.save(optionalChargePoint);
+        } else {
+            throw new EntityNotFoundException("ChargePoint with ocppId " + ocppId + " not found");
+        }
     }
     @Transactional
-    public void update(ChargePointDto chargePointDto) {
-        final ChargePoint chargePoint = chargePointMapper.toEntity(chargePointDto);
-        chargePointRepository.save(chargePoint);
-
+    public void findByOnlineReset(){
+        List<ChargePoint> chargePointsList = chargePointRepository.findByOnline(true);
+        for (ChargePoint chargePoint : chargePointsList) {
+            chargePoint.setOnline(false);
+            chargePoint.setLastDisconnected(OffsetDateTime.now());
+            chargePointRepository.save(chargePoint);
+        }
     }
 
 }

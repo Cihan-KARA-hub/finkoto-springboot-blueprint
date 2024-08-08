@@ -1,4 +1,18 @@
-
+spring:
+  datasource:
+    url: ${CHARGE_STATION_DB:jdbc:postgresql://localhost:5433/charge}
+    username: admin1
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database: postgresql
+    open-in-view: false
+    generate-ddl: false
 websocket:
-  port: 8443
-  host: localhost
+  url: ${WEB_SOCKET_URL:ws://localhost:8443}

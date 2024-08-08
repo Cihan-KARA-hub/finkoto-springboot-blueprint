@@ -1,7 +1,7 @@
 server:
-  port: 8089
+  port: 8087
   servlet:
-    context-path: /ocpp-mock
+    context-path: /ocpp-mock-server
 spring:
   application:
     name: ocpp-mock-server

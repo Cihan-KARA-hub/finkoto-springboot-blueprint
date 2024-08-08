@@ -9,6 +9,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: bigint
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -42,7 +43,7 @@ databaseChangeLog:
                   type: varchar(2)
               - column:
                   name: status
-                  type: varchar(50)
+                  type: varchar(16)
               - column:
                   name: power_factor
                   type: int
@@ -52,3 +53,13 @@ databaseChangeLog:
             constraintName: fk_connector_charge_point_id
             referencedColumnNames: id
             referencedTableName: charge_point
+  - changeSet:
+      id: 2
+      author: cihan
+      changes:
+        - createIndex:
+            indexName: charge_point_id
+            tableName: connector
+            columns:
+              - column:
+                  name: charge_point_id

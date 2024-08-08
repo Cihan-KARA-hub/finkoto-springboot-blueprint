@@ -1,14 +1,13 @@
-package com.finkoto.chargestation.repository;
+package com.finkoto.ocppmockserver.repository;
 
-import com.finkoto.chargestation.model.ChargePoint;
+
+import com.finkoto.ocppmockserver.model.ChargePoint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-
 @Repository
 public interface ChargePointRepository extends JpaRepository<ChargePoint, Long> {
-    ChargePoint findByOcppId(String ocppId);
-    List<ChargePoint> findByOnline (boolean online);
+   List<ChargePoint>  findByOnline (boolean online);
 }

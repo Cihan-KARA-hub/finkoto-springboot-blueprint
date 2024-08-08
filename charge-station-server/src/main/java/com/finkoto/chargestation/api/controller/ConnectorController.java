@@ -4,6 +4,7 @@ import com.finkoto.chargestation.api.dto.ConnectorDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.services.ConnectorService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,27 +15,33 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/connector")
+@RequestMapping("/connectors")
 public class ConnectorController {
 
-     private final ConnectorService connectorService;
+    private final ConnectorService connectorService;
 
     @GetMapping
     public ResponseEntity<PageableResponseDto<ConnectorDto>> getAllConnector(
-            //@RequestParam Long chargePointId,
-            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) final Pageable pageable
+            @RequestParam(required = false) Long chargePointId,
+            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) @ParameterObject Pageable pageable
     ) {
-        return ResponseEntity.ok(connectorService.getAll(pageable));
+        return ResponseEntity.ok(connectorService.getAll(pageable, chargePointId));
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ConnectorDto> getConnectorById(@PathVariable Long id) {
-       return ResponseEntity.ok(connectorService.findById(id));
+        ConnectorDto dto =connectorService.findById(id);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping
     public ResponseEntity<ConnectorDto> createConnector(@RequestBody ConnectorDto connectorDto) {
         connectorService.create(connectorDto);
-        return new ResponseEntity<ConnectorDto>(HttpStatus.CREATED);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ConnectorDto> updateConnector(@RequestBody ConnectorDto connectorDto,@PathVariable Long id) {
+        return  ResponseEntity.ok(connectorService.update(connectorDto, id));
     }
 
     @DeleteMapping("/{id}")
@@ -43,9 +50,6 @@ public class ConnectorController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<ConnectorDto> updateConnector(@RequestBody ConnectorDto connectorDto) {
-        connectorService.update(connectorDto);
-        return new ResponseEntity<ConnectorDto>(HttpStatus.NO_CONTENT);
-    }
+
+
 }

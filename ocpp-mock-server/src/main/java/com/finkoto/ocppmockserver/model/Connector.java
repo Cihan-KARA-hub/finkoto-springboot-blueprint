@@ -1,7 +1,8 @@
-package com.finkoto.chargestation.model;
+package com.finkoto.ocppmockserver.model;
 
-import com.finkoto.chargestation.model.enums.ConnectorStatus;
-import com.finkoto.chargestation.model.enums.CurrentType;
+
+import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
+import com.finkoto.ocppmockserver.model.enums.CurrentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.OffsetDateTime;
 

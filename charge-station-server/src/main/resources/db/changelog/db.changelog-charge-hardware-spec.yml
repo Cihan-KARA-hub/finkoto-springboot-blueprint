@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: cihan
+      changes:
+        - createTable:
+            tableName: charge_hardware_spec
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: charge_point_vendor
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_point_model
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_point_serial_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_box_serial_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: firmware_version
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: iccid
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: imsi
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meter_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meter_serial_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false

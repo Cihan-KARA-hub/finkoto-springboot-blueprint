@@ -9,6 +9,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: bigint
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -34,14 +35,14 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: online
-                  type: bit
-                  defaultValueBoolean: true
+                  type: number(1)
+                  defaultValueNumeric: '0'
                   constraints:
                     nullable: false
               - column:
                   name: disabled
-                  type: bit
-                  defaultValueBoolean: false
+                  type: number(1)
+                  defaultValueNumeric: '0'
                   constraints:
                     nullable: false
               - column:
@@ -55,51 +56,6 @@ databaseChangeLog:
                   type: timestamp
         - addUniqueConstraint:
             columnNames: ocpp_id
-            constraintName: unique_charge_point_ocpp_id
+            constraintName: uc_charge_point_ocpp_id
             tableName: charge_point
 
-  - changeSet:
-      id: 2
-      author: cihan
-      changes:
-        - createTable:
-            tableName: charge_point
-            columns:
-              - column:
-                  name: charge_point_id
-                  type: int
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: connector
-                  type: int
-                  constraints:
-                    nullable: false
-              - column:
-                  name: disable
-                  type: boolean
-                  constraints:
-                    nullable: false
-              - column:
-                  name: ocpp_id
-                  type: int
-                  constraints:
-                    nullable: false
-              - column:
-                  name: charge_station_id
-                  type: int
-                  constraints:
-                    nullable: false
-
-  - changeSet:
-      id: 3
-      author: cihan
-      changes:
-        - addForeignKeyConstraint:
-            baseTableName: charge_point
-            baseColumnNames: charge_station_id
-            constraintName: fk_charge_station_id
-            referencedTableName: charge_central
-            referencedColumnNames: charge_central_id

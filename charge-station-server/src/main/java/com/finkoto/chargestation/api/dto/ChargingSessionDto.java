@@ -1,11 +1,12 @@
 package com.finkoto.chargestation.api.dto;
 
+import com.finkoto.chargestation.model.enums.Reason;
+import com.finkoto.chargestation.model.enums.SessionStatus;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -27,5 +28,6 @@ public class ChargingSessionDto implements Serializable {
     private BigDecimal activePower;
     private String activePowerUnit;
     private OffsetDateTime unplugTime;
-
+    private Reason reason;
+    private SessionStatus status;
 }
