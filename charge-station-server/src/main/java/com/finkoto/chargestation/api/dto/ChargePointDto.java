@@ -20,4 +20,5 @@ public class ChargePointDto implements Serializable {
     private OffsetDateTime lastConnected;
     private OffsetDateTime lastDisconnected;
     private OffsetDateTime lastHealthChecked;
+    private ChargeHardwareSpecDto chargeHardwareSpec;
 }

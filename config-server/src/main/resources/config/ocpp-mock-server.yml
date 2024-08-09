@@ -16,3 +16,16 @@ spring:
     generate-ddl: false
 websocket:
   url: ${WEB_SOCKET_URL:ws://localhost:8443}
+
+springdoc:
+  version: '@springdoc.version@'
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+  oAuthFlow:
+    authorizationUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/auth
+    tokenUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
+liquibase:
+  change-log: classpath:/db/changelog/db.changelog-master.yaml
+  default-schema: public

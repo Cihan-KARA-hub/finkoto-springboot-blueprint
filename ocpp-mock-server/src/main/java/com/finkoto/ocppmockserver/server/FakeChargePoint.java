@@ -1,5 +1,6 @@
 package com.finkoto.ocppmockserver.server;
 
+import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import eu.chargetime.ocpp.CallErrorException;
 import eu.chargetime.ocpp.ClientEvents;
 import eu.chargetime.ocpp.IClientAPI;
@@ -84,6 +85,7 @@ public class FakeChargePoint {
                             public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(
                                     RemoteStartTransactionRequest request) {
                                 receivedRequest = request;
+                                // TODO mock_charging_session tablosu yaratalım, bu istek gelince kayıt atalım.
                                 return new RemoteStartTransactionConfirmation(RemoteStartStopStatus.Accepted);
                             }
 
@@ -272,8 +274,12 @@ public class FakeChargePoint {
         }
     }
 
-    public void sendBootNotification(String vendor, String model) {
-        Request request = core.createBootNotificationRequest(vendor, model);
+    public void sendBootNotification(ChargeHardwareSpec hardwareSpec) {
+        BootNotificationRequest request = core.createBootNotificationRequest(hardwareSpec.getChargePointVendor(), hardwareSpec.getChargePointModel());
+        request.setChargePointSerialNumber(hardwareSpec.getChargePointSerialNumber());
+        request.setImsi(hardwareSpec.getImsi());
+        request.setIccid(hardwareSpec.getIccid());
+        // TODO geri kalan alanlar
         send(request);
     }
 

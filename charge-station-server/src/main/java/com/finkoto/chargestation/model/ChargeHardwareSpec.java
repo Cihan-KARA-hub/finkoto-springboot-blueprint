@@ -1,6 +1,5 @@
 package com.finkoto.chargestation.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "charge_hardware_spec")
+@Table(name = "charge_hardware_spec") // TODO rename to charge_hardware_spec
 public class ChargeHardwareSpec {
 
     @Id
@@ -45,4 +44,8 @@ public class ChargeHardwareSpec {
 
     @Column(name = "meter_serial_number", nullable = false, length = 50)
     private String meterSerialNumber;
+
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JoinColumn(name = "charge_point_id", unique = true)
+    private ChargePoint chargePoint;
 }

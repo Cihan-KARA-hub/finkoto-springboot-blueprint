@@ -1,6 +1,4 @@
 databaseChangeLog:
-
-
   - changeSet:
       id: 3
       author: cihan

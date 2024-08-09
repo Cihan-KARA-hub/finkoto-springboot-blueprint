@@ -61,6 +61,9 @@ public class ChargePoint {
     @OneToMany(mappedBy = "chargePoint", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Connector> connectors = new LinkedHashSet<>();
 
+    @OneToOne(mappedBy = "chargePoint", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ChargeHardwareSpec chargeHardwareSpec;
+
     public void addConnector(Connector connector) {
         connector.setChargePoint(this);
         this.connectors.add(connector);
@@ -80,4 +83,3 @@ public class ChargePoint {
         return ocppId.hashCode();
     }
 }
-

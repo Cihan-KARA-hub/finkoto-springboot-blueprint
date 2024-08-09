@@ -9,7 +9,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
 @EntityScan(basePackages = "com.finkoto.chargestation.model")
 @EnableDiscoveryClient
-
 public class ChargeStationServerApplication {
 
     public static void main(String[] args) {

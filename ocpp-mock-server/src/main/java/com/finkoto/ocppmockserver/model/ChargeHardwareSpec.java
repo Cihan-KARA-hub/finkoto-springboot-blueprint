@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -45,4 +44,8 @@ public class ChargeHardwareSpec {
 
     @Column(name = "meter_serial_number", nullable = false, length = 50)
     private String meterSerialNumber;
+
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JoinColumn(name = "charge_point_id", unique = true)
+    private ChargePoint chargePoint;
 }

@@ -1,9 +1,5 @@
 package com.finkoto.ocppmockserver.ocpp.client;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.finkoto.ocppmockserver.controller.ChargeHardwareSpecController;
-import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import com.finkoto.ocppmockserver.model.ChargePoint;
 import com.finkoto.ocppmockserver.repository.ChargePointRepository;
 import com.finkoto.ocppmockserver.server.FakeChargePoint;
@@ -21,38 +17,30 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-
 public class JsonClientImpl {
+    final FakeChargePoint fakeChargePoint = new FakeChargePoint();
     private final Map<String, FakeChargePoint> connections = new HashMap<>();
-
     private final ChargePointRepository chargePointRepository;
-    ChargeHardwareSpec chargeHardwareSpec;
-    ChargeHardwareSpecController chargeHardwareSpecController;
-
     @Value("${websocket.url}")
     private String webSocketUrl;
-    final FakeChargePoint fakeChargePoint = new FakeChargePoint();
 
     @PostConstruct
     public void startServer() throws Exception {
         chargePointRepository.findAll().forEach(chargePoint -> {
             fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
             connections.put(chargePoint.getOcppId(), fakeChargePoint);
-            // TODO cihaz bilgilerini apiden girip, tablodan okuyup gondermek lazim
-            //api kısmını  charge station server kısmında  yazılacak
-            //burdan çagıracam
-
-            fakeChargePoint.sendBootNotification(chargeHardwareSpec.getChargePointVendor(), chargeHardwareSpec.getChargePointModel() );
+            fakeChargePoint.sendBootNotification(chargePoint.getChargeHardwareSpec());
         });
     }
-    @PostConstruct
+
     @Scheduled(fixedRate = 10000)
-    public void interrupt(){
+    public void interrupt() {
         List<ChargePoint> onlineChargePoints = chargePointRepository.findByOnline(true);
         onlineChargePoints.forEach(chargePoint -> {
-          fakeChargePoint.sendHeartbeatRequest();
+            fakeChargePoint.sendHeartbeatRequest();
         });
     }
 
-    // TODO, online=true olan chargePointleri sorgula, heartbeat yolla +
+    // TODO mock_charging_session tablosunda aktif şarj varsa meterValue istei yolla.
+    // random int 0-100 üret currMeter = currMeter + random
 }

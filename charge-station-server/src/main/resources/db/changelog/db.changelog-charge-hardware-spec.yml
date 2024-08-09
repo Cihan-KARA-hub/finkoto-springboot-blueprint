@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 5
+      id: 6
       author: cihan
       changes:
         - createTable:
@@ -58,3 +58,14 @@ databaseChangeLog:
                   type: VARCHAR(50)
                   constraints:
                     nullable: false
+              - column:
+                  name: charge_point_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: charge_hardware_spec
+            baseColumnNames: charge_point_id
+            referencedTableName: charge_point
+            referencedColumnNames: id
+            constraintName: fk_charge_hardware_spec_charge_point

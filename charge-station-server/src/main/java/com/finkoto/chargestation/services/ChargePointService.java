@@ -5,6 +5,7 @@ import com.finkoto.chargestation.api.dto.ChargePointDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargePointMapper;
 import com.finkoto.chargestation.model.ChargePoint;
+import com.finkoto.chargestation.ocpp.OCPPCentralSystem;
 import com.finkoto.chargestation.repository.ChargePointRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ChargePointService {
+    private final OCPPCentralSystem centralSystem;
     private final ChargePointRepository chargePointRepository;
     private final ChargePointMapper chargePointMapper;
 
@@ -52,28 +54,26 @@ public class ChargePointService {
 
     @Transactional
     public ChargePointDto findById(Long id) {
-        return chargePointRepository.findById(id).map(chargePointMapper::toDto).orElse(null);
+        return chargePointRepository.findById(id).map(chargePointMapper::toDto).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
     }
 
     @Transactional
-    public void chargePointOnlineSet(String ocppId) {
-
-            ChargePoint optionalChargePoint = chargePointRepository.findByOcppId(ocppId);
-
-        if (optionalChargePoint != null) {
-
-            optionalChargePoint.setOnline(true);
-            optionalChargePoint.setLastConnected(OffsetDateTime.now());
-            optionalChargePoint.setLastDisconnected(null);
-
-            chargePointRepository.save(optionalChargePoint);
-        } else {
-            throw new EntityNotFoundException("ChargePoint with ocppId " + ocppId + " not found");
-        }
+    public ChargePoint findByOcppId(String ocppId) {
+        return chargePointRepository.findByOcppId(ocppId).orElseThrow(() -> new EntityNotFoundException("Entity with ocppId: " + ocppId + " not found."));
     }
+
     @Transactional
-    public void findByOnlineReset(){
-        List<ChargePoint> chargePointsList = chargePointRepository.findByOnline(true);
+    public void newSession(String ocppId) {
+        final ChargePoint optionalChargePoint = findByOcppId(ocppId);
+        optionalChargePoint.setOnline(true);
+        optionalChargePoint.setLastConnected(OffsetDateTime.now());
+        optionalChargePoint.setLastDisconnected(null);
+        chargePointRepository.save(optionalChargePoint);
+    }
+
+    @Transactional
+    public void lostSession() {
+        final List<ChargePoint> chargePointsList = chargePointRepository.findByOnline(true);
         for (ChargePoint chargePoint : chargePointsList) {
             chargePoint.setOnline(false);
             chargePoint.setLastDisconnected(OffsetDateTime.now());
@@ -81,4 +81,10 @@ public class ChargePointService {
         }
     }
 
+    @Transactional
+    public void handleHeartbeatRequest(String ocppId) {
+        ChargePoint chargePoint = findByOcppId(ocppId);
+        chargePoint.setLastHealthChecked(OffsetDateTime.now());
+
+    }
 }
