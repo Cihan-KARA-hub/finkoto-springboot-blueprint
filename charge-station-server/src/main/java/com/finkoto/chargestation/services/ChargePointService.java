@@ -85,6 +85,5 @@ public class ChargePointService {
     public void handleHeartbeatRequest(String ocppId) {
         ChargePoint chargePoint = findByOcppId(ocppId);
         chargePoint.setLastHealthChecked(OffsetDateTime.now());
-
     }
 }

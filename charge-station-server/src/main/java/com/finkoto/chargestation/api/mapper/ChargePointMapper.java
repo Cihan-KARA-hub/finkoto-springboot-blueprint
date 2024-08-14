@@ -1,9 +1,7 @@
 package com.finkoto.chargestation.api.mapper;
 
 import com.finkoto.chargestation.api.dto.ChargePointDto;
-import com.finkoto.chargestation.api.dto.ChargingSessionDto;
 import com.finkoto.chargestation.model.ChargePoint;
-import com.finkoto.chargestation.model.ChargingSession;
 import org.mapstruct.*;
 
 import java.util.List;

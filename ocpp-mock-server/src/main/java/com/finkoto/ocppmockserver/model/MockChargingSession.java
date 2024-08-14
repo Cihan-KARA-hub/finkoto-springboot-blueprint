@@ -1,34 +1,29 @@
-package com.finkoto.chargestation.model;
+package com.finkoto.ocppmockserver.model;
 
-
-import com.finkoto.chargestation.model.enums.Reason;
-import com.finkoto.chargestation.model.enums.SessionStatus;
+import com.finkoto.ocppmockserver.model.enums.SessionStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "charging_session")
-public class ChargingSession {
+@Table(name = "mock_charging_session")
+public class MockChargingSession {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false, unique = true)
+    @Column(name = "id")
     private Long id;
 
     @Version
-    @Column(name = "version", nullable = false, columnDefinition = "int default 1")
+    @Column(name = "version")
     private int version;
 
     @CreationTimestamp
@@ -49,15 +44,11 @@ public class ChargingSession {
     private Integer meterStop;
 
     @Column(name = "unit", length = 30)
-    private String unit;
+    private String unit = "Wh";
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "enum('FAILED','FINISHED','ACTIVE','CANCELED','NEW') default 'NEW'")
+    @Column(name = "status", length = 8, nullable = false)
     private SessionStatus status = SessionStatus.NEW;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reason")
-    private Reason reason;
 
     @Column(name = "begin_time")
     private OffsetDateTime beginTime;
@@ -66,7 +57,7 @@ public class ChargingSession {
     private OffsetDateTime endTime;
 
     @Column(name = "battery_percentage_start", length = 50)
-    private String batteryPercentageStart;
+    private String batteryPercentageStart = "0";
 
     @Column(name = "battery_percentage", length = 50)
     private String batteryPercentage;
@@ -78,14 +69,10 @@ public class ChargingSession {
     private BigDecimal activePower;
 
     @Column(name = "active_power_unit", length = 30)
-    private String activePowerUnit;
+    private String activePowerUnit = "Wh";
 
     @Column(name = "unplug_time")
-    private OffsetDateTime unplugTime;
-
-    /*@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "id")
-    private Connector connector;*/
+    private LocalDateTime unplugTime;
 
     @Column(name = "charge_point_ocpp_id")
     private String chargePointOcppId;
@@ -101,7 +88,7 @@ public class ChargingSession {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ChargingSession that = (ChargingSession) o;
+        MockChargingSession that = (MockChargingSession) o;
         return id.equals(that.id);
     }
 
@@ -110,4 +97,3 @@ public class ChargingSession {
         return id.hashCode();
     }
 }
-

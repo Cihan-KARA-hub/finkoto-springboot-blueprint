@@ -1,12 +1,8 @@
 package com.finkoto.chargestation.api.mapper;
 
 
-import com.finkoto.chargestation.api.dto.ChargePointDto;
 import com.finkoto.chargestation.api.dto.ChargingSessionDto;
-import com.finkoto.chargestation.api.dto.ConnectorDto;
-import com.finkoto.chargestation.model.ChargePoint;
 import com.finkoto.chargestation.model.ChargingSession;
-import com.finkoto.chargestation.model.Connector;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

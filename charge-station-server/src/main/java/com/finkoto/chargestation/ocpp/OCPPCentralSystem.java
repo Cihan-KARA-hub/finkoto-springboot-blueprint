@@ -1,7 +1,10 @@
 package com.finkoto.chargestation.ocpp;
 
 
+import com.finkoto.chargestation.model.ChargingSession;
+import com.finkoto.chargestation.model.enums.SessionStatus;
 import com.finkoto.chargestation.services.ChargePointService;
+import com.finkoto.chargestation.services.ChargingSessionService;
 import eu.chargetime.ocpp.JSONServer;
 import eu.chargetime.ocpp.ServerEvents;
 import eu.chargetime.ocpp.feature.profile.ServerCoreEventHandler;
@@ -24,16 +27,14 @@ import eu.chargetime.ocpp.model.securityext.types.*;
 import eu.chargetime.ocpp.model.smartcharging.SetChargingProfileRequest;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 
 @Slf4j
@@ -41,9 +42,7 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor
 public class OCPPCentralSystem implements ServerCoreEventHandler {
     private final Map<UUID, String> sessions = new HashMap<>();
-
-    @Setter
-    @Lazy
+    private ChargingSessionService chargingSessionService;
     private ChargePointService chargePointService;
     private JSONServer server;
 
@@ -57,6 +56,18 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     public void startServer() {
         this.server = new JSONServer(new ServerCoreProfile(this));
         server.open(webSocketHost, webSocketPort, createServerEvents());
+    }
+
+    @Lazy
+    @Autowired
+    public void setChargingSessionService(ChargingSessionService chargingSessionService) {
+        this.chargingSessionService = chargingSessionService;
+    }
+
+    @Lazy
+    @Autowired
+    public void setChargePointService(ChargePointService chargePointService) {
+        this.chargePointService = chargePointService;
     }
 
     private ServerEvents createServerEvents() {
@@ -112,7 +123,13 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         BootNotificationConfirmation confirmation = new BootNotificationConfirmation(ZonedDateTime.now(), 0, RegistrationStatus.Accepted);
         System.out.println(request.getChargePointModel() + " \n" +
                 request.getChargePointSerialNumber() + "  \n" +
-                request.getMeterType());
+                request.getMeterType() + " \n" +
+                request.getImsi() + " \n" +
+                request.getIccid() + " \n" +
+                request.getFirmwareVersion() + " \n" +
+                request.getMeterSerialNumber() + " \n" +
+                request.getChargePointVendor() + " \n");
+
         System.out.println(confirmation);
         return confirmation; // returning null means unsupported feature
     }
@@ -134,24 +151,34 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
 
     @Override
     public MeterValuesConfirmation handleMeterValuesRequest(UUID sessionIndex, MeterValuesRequest request) {
+        //TODO Charge sessions a kaydet
+        Arrays.stream(request.getMeterValue()).findFirst().flatMap(meterValue -> Arrays.stream(meterValue.getSampledValue()).findFirst()).ifPresent(sampledValue -> {
+            String value = sampledValue.getValue();
+            chargingSessionService.handleMeterValuesRequest(value);
+            System.out.println(value +"meter value");
+
+        });
         System.out.println(request);
-        // ... handle event
-        return null; // returning null means unsupported feature
+        return new MeterValuesConfirmation(); // returning null means unsupported feature
     }
 
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
-        // TODO charging_session tablosu güncellenecek.
-        final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
-        return new StartTransactionConfirmation(idTagInfo, 1);
+        List<ChargingSession> sessionList = chargingSessionService.findByStatus(SessionStatus.NEW);
+        for (ChargingSession session : sessionList) {
+            ChargingSession sessionInd = chargingSessionService.activateNewChargingSession(session.getId(), session.getConnectorId());
+            new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Accepted), Math.toIntExact(sessionInd.getId()));
+        }
+        return handleStartTransactionRequest(sessionIndex, request);
     }
 
     @Override
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
         System.out.println(request);
         // ... handle event
-        return null; // returning null means unsupported feature
+
+        return new StatusNotificationConfirmation(); // returning null means unsupported feature
     }
 
     @Override
@@ -195,6 +222,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     }
 
     public void sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
+        chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
         final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
         request.setConnectorId(connectorId);
         send(ocppId, request).whenComplete((confirmation, throwable) -> {
@@ -207,7 +235,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     }
 
     public void sendRemoteStartTransactionWithProfileRequest(String ocppId, int connectorId, String idTag) {
-        RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
+        final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
         request.setConnectorId(connectorId);
 
         ChargingSchedule schedule =
@@ -226,9 +254,15 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     }
 
     public void sendRemoteStopTransactionRequest(String ocppId, int transactionId) {
-        RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(transactionId);
+        final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(transactionId);
         request.setTransactionId(transactionId);
-        send(ocppId, request);
+        send(ocppId, request).whenComplete((confirmation, throwable) -> {
+            if (throwable != null) {
+                log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);
+            } else {
+                log.info("Remote start transaction successful for charge point: {}", ocppId);
+            }
+        });
     }
 
     public void sendResetRequest(String ocppId, ResetType type) {

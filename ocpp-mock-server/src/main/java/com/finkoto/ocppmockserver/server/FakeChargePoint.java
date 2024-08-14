@@ -1,10 +1,13 @@
 package com.finkoto.ocppmockserver.server;
 
 import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
+import com.finkoto.ocppmockserver.model.MockChargingSession;
+import com.finkoto.ocppmockserver.model.enums.SessionStatus;
+import com.finkoto.ocppmockserver.services.ConnectorServices;
+import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
 import eu.chargetime.ocpp.CallErrorException;
 import eu.chargetime.ocpp.ClientEvents;
 import eu.chargetime.ocpp.IClientAPI;
-import eu.chargetime.ocpp.PropertyConstraintException;
 import eu.chargetime.ocpp.feature.profile.*;
 import eu.chargetime.ocpp.feature.profile.securityext.ClientSecurityExtEventHandler;
 import eu.chargetime.ocpp.feature.profile.securityext.ClientSecurityExtProfile;
@@ -23,23 +26,30 @@ import eu.chargetime.ocpp.model.smartcharging.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
+@SuppressWarnings("CallToPrintStackTrace")
 @Slf4j
 public class FakeChargePoint {
-    final ClientCoreProfile core;
-    final ClientSmartChargingProfile smartCharging;
-    final ClientRemoteTriggerProfile remoteTrigger;
-    final ClientFirmwareManagementProfile firmware;
-    final ClientLocalAuthListProfile localAuthList;
-    final ClientReservationProfile reservation;
-    final ClientSecurityExtProfile securityExt;
+    private final String chargePointOcppId;
+    private final ClientCoreProfile core;
+    private final ClientSmartChargingProfile smartCharging;
+    private final ClientRemoteTriggerProfile remoteTrigger;
+    private final ClientFirmwareManagementProfile firmware;
+    private final ClientLocalAuthListProfile localAuthList;
+    private final ClientReservationProfile reservation;
+    private final ClientSecurityExtProfile securityExt;
+    private final MockChargingSessionServices mockChargingSessionServices;
+    private final ConnectorServices connectorServices;
     IClientAPI client;
     Confirmation receivedConfirmation;
     Request receivedRequest;
     Throwable receivedException;
 
-    public FakeChargePoint() {
-
+    public FakeChargePoint(String chargePointOcppId, MockChargingSessionServices mockChargingSessionServices, ConnectorServices connectorServices) {
+        this.mockChargingSessionServices = mockChargingSessionServices;
+        this.connectorServices = connectorServices;
+        this.chargePointOcppId = chargePointOcppId;
         core =
                 new ClientCoreProfile(
                         new ClientCoreEventHandler() {
@@ -67,7 +77,7 @@ public class FakeChargePoint {
                             @Override
                             public ClearCacheConfirmation handleClearCacheRequest(ClearCacheRequest request) {
                                 receivedRequest = request;
-                                ClearCacheConfirmation confirmation = new ClearCacheConfirmation();
+                                ClearCacheConfirmation confirmation = new ClearCacheConfirmation(ClearCacheStatus.Accepted);
                                 confirmation.setStatus(ClearCacheStatus.Accepted);
                                 return confirmation;
                             }
@@ -76,22 +86,25 @@ public class FakeChargePoint {
                             public DataTransferConfirmation handleDataTransferRequest(
                                     DataTransferRequest request) {
                                 receivedRequest = request;
-                                DataTransferConfirmation confirmation = new DataTransferConfirmation();
+                                DataTransferConfirmation confirmation = new DataTransferConfirmation(DataTransferStatus.Accepted);
                                 confirmation.setStatus(DataTransferStatus.Accepted);
                                 return confirmation;
                             }
 
                             @Override
-                            public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(
-                                    RemoteStartTransactionRequest request) {
+                            public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(RemoteStartTransactionRequest request) {
+
+                                log.info(request.toString());
                                 receivedRequest = request;
-                                // TODO mock_charging_session tablosu yaratalım, bu istek gelince kayıt atalım.
+                                mockChargingSessionServices.handleRemoteStartTransactionRequest(chargePointOcppId, request.getConnectorId(), request.getIdTag());
                                 return new RemoteStartTransactionConfirmation(RemoteStartStopStatus.Accepted);
                             }
 
                             @Override
                             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(
                                     RemoteStopTransactionRequest request) {
+                                 int mockId =request.getTransactionId();
+                                 mockChargingSessionServices.remoteStopTransactionRequest(mockId);
                                 receivedRequest = request;
                                 return new RemoteStopTransactionConfirmation(RemoteStartStopStatus.Accepted);
                             }
@@ -279,7 +292,13 @@ public class FakeChargePoint {
         request.setChargePointSerialNumber(hardwareSpec.getChargePointSerialNumber());
         request.setImsi(hardwareSpec.getImsi());
         request.setIccid(hardwareSpec.getIccid());
-        // TODO geri kalan alanlar
+        request.setChargePointModel(hardwareSpec.getChargePointModel());
+        request.setMeterType(hardwareSpec.getMeterType());
+        request.setFirmwareVersion(hardwareSpec.getFirmwareVersion());
+        request.setMeterSerialNumber(hardwareSpec.getMeterSerialNumber());
+        request.setChargePointVendor(hardwareSpec.getChargePointVendor());
+        request.setChargeBoxSerialNumber(hardwareSpec.getChargeBoxSerialNumber());
+
         send(request);
     }
 
@@ -298,26 +317,18 @@ public class FakeChargePoint {
         send(request);
     }
 
-    public void sendMeterValuesRequest() {
-        try {
-            Request request = core.createMeterValuesRequest(42, ZonedDateTime.now(), "42");
-            send(request);
-        } catch (PropertyConstraintException ex) {
-            ex.printStackTrace();
-        }
+    public void sendStartTransactionRequest(Integer connectorId, String idTag, Integer meterStart) {
+        Request request = core.createStartTransactionRequest(connectorId, idTag, meterStart, ZonedDateTime.now());
+        send(request);
     }
 
-    public void sendStartTransactionRequest() {
-        try {
-            Request request = core.createStartTransactionRequest(5, "some id", 0, ZonedDateTime.now());
-            send(request);
-        } catch (PropertyConstraintException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void sendSpTransactionRequest() {
+    public void sendStopTransactionRequest() {
         StopTransactionRequest request = core.createStopTransactionRequest(42, ZonedDateTime.now(), 42);
+        send(request);
+    }
+
+    public void sendMeterValuesRequest(Integer connectorId, String meterValue) {
+        MeterValuesRequest request = core.createMeterValuesRequest(connectorId, ZonedDateTime.now(), meterValue);
         send(request);
     }
 
@@ -334,14 +345,25 @@ public class FakeChargePoint {
     }
 
     public void sendStatusNotificationRequest() {
-        try {
-            StatusNotificationRequest request =
-                    core.createStatusNotificationRequest(
-                            42, ChargePointErrorCode.NoError, ChargePointStatus.Available);
-            send(request);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        //TODO StatusNotificationRequest { "ocppMessageId": "eb01135f-18a7-45f7-b637-1c9c6b1a88d1", "connectorId": 1, "errorCode": "NoError",
+        // "info": null, "status": "Charging", "timestamp": "2024-08-12T11:15:36Z", "vendorId": null, "vendorErrorCode": null }
+
+        List<MockChargingSession> mockChargingActiveSessions = mockChargingSessionServices.findByStatus(SessionStatus.ACTIVE);
+        if (!mockChargingActiveSessions.isEmpty()) {
+            for (MockChargingSession session : mockChargingActiveSessions) {
+                final String chargePoint = session.getChargePointOcppId();
+                final Long connectorId = connectorServices.findConnector(Long.valueOf(chargePoint));
+                connectorServices.setStatusCharge(Long.valueOf(chargePoint));
+                try {
+                    StatusNotificationRequest request =
+                            core.createStatusNotificationRequest(Math.toIntExact(connectorId), ChargePointErrorCode.NoError, ChargePointStatus.Charging);
+                    send(request);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
+
     }
 
     public void sendDiagnosticsStatusNotificationRequest(DiagnosticsStatus status) {

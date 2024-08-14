@@ -43,28 +43,24 @@ public class ClientCoreProfileConfig {
             @Override
             public DataTransferConfirmation handleDataTransferRequest(DataTransferRequest request) {
                 log.info(request.toString());
-
                 return new DataTransferConfirmation(DataTransferStatus.Accepted);
             }
 
             @Override
             public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(RemoteStartTransactionRequest request) {
                 log.info(request.toString());
-
                 return new RemoteStartTransactionConfirmation(RemoteStartStopStatus.Accepted);
             }
 
             @Override
             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(RemoteStopTransactionRequest request) {
                 log.info(request.toString());
-
                 return new RemoteStopTransactionConfirmation(RemoteStartStopStatus.Accepted);
             }
 
             @Override
             public ResetConfirmation handleResetRequest(ResetRequest request) {
                 log.info(request.toString());
-
                 return new ResetConfirmation(ResetStatus.Accepted);
             }
 

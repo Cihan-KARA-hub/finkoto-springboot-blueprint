@@ -7,4 +7,6 @@ databaseChangeLog:
       file: db/changelog/db.changelog-charging-session.yml
   - include:
       file: db/changelog/db.changelog-charge-hardware-spec.yml
+  - include:
+      file: db/changelog/db.changelog-mock-charge-sessions.yml
 

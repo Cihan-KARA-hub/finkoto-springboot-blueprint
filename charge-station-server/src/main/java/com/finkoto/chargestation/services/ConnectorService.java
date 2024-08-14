@@ -42,7 +42,6 @@ public class ConnectorService {
 
     @Transactional
     public ConnectorDto create(ConnectorDto connectorDto) {
-        // TODO connectorsDto içine chargePointId eklenecek +
         Long chargePointId = connectorDto.getChargePointId();
         ChargePoint chargePoint = chargePointRepository.findById(chargePointId).orElseThrow(() -> new IllegalStateException("Charge point not found with id: " + chargePointId));
         Connector connector = new Connector();
@@ -63,6 +62,10 @@ public class ConnectorService {
         connectorMapper.toEntity(connector, connectorDto);
         final Connector newConnector = connectorRepository.save(connector);
         return connectorMapper.toDto(newConnector);
+    }
+    @Transactional
+    public Long   findIdByChargePointId(Long chargePointId){
+        return connectorRepository.findIdByChargePointId(chargePointId);
     }
 
 }

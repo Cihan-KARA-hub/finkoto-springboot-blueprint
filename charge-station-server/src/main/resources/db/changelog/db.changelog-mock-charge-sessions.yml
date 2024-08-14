@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: 8
+      id: 3
       author: cihan
       changes:
         - createTable:
-            tableName: charging_session
+            tableName: mock_charging_session
             columns:
               - column:
                   name: id
@@ -16,7 +16,6 @@ databaseChangeLog:
               - column:
                   name: version
                   type: int
-                  autoIncrement: true
                   constraints:
                     nullable: false
               - column:
@@ -46,9 +45,6 @@ databaseChangeLog:
                   type: varchar(8)
                   constraints:
                     nullable: false
-              - column:
-                  name: reason
-                  type: varchar(16)
               - column:
                   name: begin_time
                   type: timestamp

@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ConnectorRepository extends JpaRepository<Connector, Long> {
     Page<Connector> findAllByChargePointId(Pageable pageable, Long chargePointId);
+    Long findIdByChargePointId(Long chargePointId);
 }
