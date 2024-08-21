@@ -1,9 +1,9 @@
-package com.finkoto.chargestation.api.controller;
+package com.finkoto.ocppmockserver.api.controller;
 
 
-import com.finkoto.chargestation.api.dto.ChargePointDto;
-import com.finkoto.chargestation.api.dto.PageableResponseDto;
-import com.finkoto.chargestation.services.ChargePointService;
+import com.finkoto.ocppmockserver.api.dto.ChargePointDto;
+import com.finkoto.ocppmockserver.api.dto.PageableResponseDto;
+import com.finkoto.ocppmockserver.services.MockChargePointServices;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -11,20 +11,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/charge-points")
-public class ChargePointController {
-
-    private final ChargePointService chargePointService;
+@RequestMapping("/mock_charge_points")
+public class MockChargePointController {
+    private final MockChargePointServices chargePointService;
 
     @GetMapping
     public ResponseEntity<PageableResponseDto<ChargePointDto>> getAllChargePoints(
-            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) @ParameterObject Pageable pageable
+            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC)
+            @ParameterObject Pageable pageable
     ) {
         return ResponseEntity.ok(chargePointService.getAll(pageable));
     }
@@ -36,7 +37,7 @@ public class ChargePointController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createChargePoint(@RequestBody ChargePointDto chargePointDto) {
+    public ResponseEntity<Void> createChargePoint(@Validated @RequestBody ChargePointDto chargePointDto) {
         chargePointService.create(chargePointDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }

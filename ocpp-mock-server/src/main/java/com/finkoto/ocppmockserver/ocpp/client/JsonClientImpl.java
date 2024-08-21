@@ -4,9 +4,9 @@ import com.finkoto.ocppmockserver.model.ChargePoint;
 import com.finkoto.ocppmockserver.model.MockChargingSession;
 import com.finkoto.ocppmockserver.model.enums.SessionStatus;
 import com.finkoto.ocppmockserver.server.FakeChargePoint;
-import com.finkoto.ocppmockserver.services.ChargePointServices;
-import com.finkoto.ocppmockserver.services.ConnectorServices;
+import com.finkoto.ocppmockserver.services.MockChargePointServices;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
+import com.finkoto.ocppmockserver.services.MockConnectorServices;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,29 +20,31 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-
 public class JsonClientImpl {
 
     private final MockChargingSessionServices mockChargingSessionServices;
-    private final ConnectorServices connectorServices;
-    private final ChargePointServices chargePointService;
+    private final MockConnectorServices mockConnectorServices;
+    private final MockChargePointServices mockChargePointServices;
     private final Map<String, FakeChargePoint> connections = new HashMap<>();
+    private final Map<String, FakeChargePoint> lostConnection = new HashMap<>();
+
     @Value("${websocket.url}")
     private String webSocketUrl;
 
-    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, ConnectorServices connectorServices, ChargePointServices chargePointService) {
+    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, MockChargePointServices mockChargePointServices) {
         this.mockChargingSessionServices = mockChargingSessionServices;
-        this.connectorServices = connectorServices;
-        this.chargePointService = chargePointService;
+        this.mockConnectorServices = mockConnectorServices;
+        this.mockChargePointServices = mockChargePointServices;
     }
 
     @PostConstruct
     public void startServer() {
-        chargePointService.findAll().forEach(chargePoint -> {
-            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, connectorServices);
-            fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
-            connections.put(chargePoint.getOcppId(), fakeChargePoint);
-            fakeChargePoint.sendBootNotification(chargePoint.getChargeHardwareSpec());
+
+        mockChargePointServices.findAll().forEach(chargePoint -> {
+                FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices);
+                fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
+                connections.put(chargePoint.getOcppId(), fakeChargePoint);
+                fakeChargePoint.sendBootNotification(chargePoint.getChargeHardwareSpec());
         });
     }
 
@@ -52,7 +54,7 @@ public class JsonClientImpl {
 
     @Scheduled(fixedRate = 10000)
     public void heatBeatScheduler() {
-        List<ChargePoint> onlineChargePoints = chargePointService.findByOnline(true);
+        List<ChargePoint> onlineChargePoints = mockChargePointServices.findByOnline(true);
         onlineChargePoints.forEach(chargePoint -> {
             FakeChargePoint fakeChargePoint = connections.get(chargePoint.getOcppId());
             if (fakeChargePoint != null) {
@@ -78,4 +80,5 @@ public class JsonClientImpl {
             getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendMeterValuesRequest(session.getConnectorId(), meterValue));
         }
     }
+    //TODO  online olmayanları al  ve bir listede tut 5 dakikada bir  baglanmaya çalışsınlar
 }

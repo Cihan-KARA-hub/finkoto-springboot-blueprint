@@ -18,7 +18,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "connector")
+@Table(name = "mock_connector")
 public class Connector {
 
     @Id

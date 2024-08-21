@@ -1,10 +1,8 @@
-package com.finkoto.chargestation.api.dto;
+package com.finkoto.ocppmockserver.api.dto;
 
-import com.finkoto.chargestation.model.enums.ConnectorStatus;
-import com.finkoto.chargestation.model.enums.CurrentType;
-import lombok.AllArgsConstructor;
+import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
+import com.finkoto.ocppmockserver.model.enums.CurrentType;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;

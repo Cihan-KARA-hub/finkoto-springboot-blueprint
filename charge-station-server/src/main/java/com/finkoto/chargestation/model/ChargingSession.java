@@ -49,7 +49,7 @@ public class ChargingSession {
     private Integer meterStop;
 
     @Column(name = "unit", length = 30)
-    private String unit;
+    private String unit ="Wh";
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "enum('FAILED','FINISHED','ACTIVE','CANCELED','NEW') default 'NEW'")

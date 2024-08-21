@@ -14,9 +14,13 @@ spring:
     database: postgresql
     open-in-view: false
     generate-ddl: false
-websocket:
-  url: ${WEB_SOCKET_URL:ws://localhost:8443}
-
+  sql:
+    init:
+      platform: postgres
+  liquibase:
+    change-log: classpath*:/db/changelog/db.changelog-master.yaml
+    enabled: true
+    default-schema: public
 springdoc:
   version: '@springdoc.version@'
   api-docs:
@@ -26,6 +30,5 @@ springdoc:
   oAuthFlow:
     authorizationUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/auth
     tokenUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
-liquibase:
-  change-log: classpath:/db/changelog/db.changelog-master.yaml
-  default-schema: public
+websocket:
+  url: ${WEB_SOCKET_URL:ws://localhost:8443}

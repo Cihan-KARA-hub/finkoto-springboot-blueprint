@@ -1,4 +1,4 @@
 databaseChangeLog:
   - includeAll:
-      path: com/finkoto/charge-station-server
+      path: com/finkoto/ocpp-mock-server
       relativeToChangelogFile: true

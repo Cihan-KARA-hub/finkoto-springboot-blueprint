@@ -3,8 +3,8 @@ package com.finkoto.ocppmockserver.server;
 import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import com.finkoto.ocppmockserver.model.MockChargingSession;
 import com.finkoto.ocppmockserver.model.enums.SessionStatus;
-import com.finkoto.ocppmockserver.services.ConnectorServices;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
+import com.finkoto.ocppmockserver.services.MockConnectorServices;
 import eu.chargetime.ocpp.CallErrorException;
 import eu.chargetime.ocpp.ClientEvents;
 import eu.chargetime.ocpp.IClientAPI;
@@ -40,15 +40,15 @@ public class FakeChargePoint {
     private final ClientReservationProfile reservation;
     private final ClientSecurityExtProfile securityExt;
     private final MockChargingSessionServices mockChargingSessionServices;
-    private final ConnectorServices connectorServices;
+    private final MockConnectorServices mockConnectorServices;
     IClientAPI client;
     Confirmation receivedConfirmation;
     Request receivedRequest;
     Throwable receivedException;
 
-    public FakeChargePoint(String chargePointOcppId, MockChargingSessionServices mockChargingSessionServices, ConnectorServices connectorServices) {
+    public FakeChargePoint(String chargePointOcppId, MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices) {
         this.mockChargingSessionServices = mockChargingSessionServices;
-        this.connectorServices = connectorServices;
+        this.mockConnectorServices = mockConnectorServices;
         this.chargePointOcppId = chargePointOcppId;
         core =
                 new ClientCoreProfile(
@@ -103,9 +103,9 @@ public class FakeChargePoint {
                             @Override
                             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(
                                     RemoteStopTransactionRequest request) {
-                                 int mockId =request.getTransactionId();
-                                 mockChargingSessionServices.remoteStopTransactionRequest(mockId);
                                 receivedRequest = request;
+                                int idTag = request.getTransactionId();
+                                mockChargingSessionServices.remoteStopTransactionRequest(idTag);
                                 return new RemoteStopTransactionConfirmation(RemoteStartStopStatus.Accepted);
                             }
 
@@ -288,18 +288,20 @@ public class FakeChargePoint {
     }
 
     public void sendBootNotification(ChargeHardwareSpec hardwareSpec) {
-        BootNotificationRequest request = core.createBootNotificationRequest(hardwareSpec.getChargePointVendor(), hardwareSpec.getChargePointModel());
-        request.setChargePointSerialNumber(hardwareSpec.getChargePointSerialNumber());
-        request.setImsi(hardwareSpec.getImsi());
-        request.setIccid(hardwareSpec.getIccid());
-        request.setChargePointModel(hardwareSpec.getChargePointModel());
-        request.setMeterType(hardwareSpec.getMeterType());
-        request.setFirmwareVersion(hardwareSpec.getFirmwareVersion());
-        request.setMeterSerialNumber(hardwareSpec.getMeterSerialNumber());
-        request.setChargePointVendor(hardwareSpec.getChargePointVendor());
-        request.setChargeBoxSerialNumber(hardwareSpec.getChargeBoxSerialNumber());
+        if (hardwareSpec != null) {
+            BootNotificationRequest request = core.createBootNotificationRequest(hardwareSpec.getChargePointVendor(), hardwareSpec.getChargePointModel());
+            request.setChargePointSerialNumber(hardwareSpec.getChargePointSerialNumber());
+            request.setImsi(hardwareSpec.getImsi());
+            request.setIccid(hardwareSpec.getIccid());
+            request.setChargePointModel(hardwareSpec.getChargePointModel());
+            request.setMeterType(hardwareSpec.getMeterType());
+            request.setFirmwareVersion(hardwareSpec.getFirmwareVersion());
+            request.setMeterSerialNumber(hardwareSpec.getMeterSerialNumber());
+            request.setChargePointVendor(hardwareSpec.getChargePointVendor());
+            request.setChargeBoxSerialNumber(hardwareSpec.getChargeBoxSerialNumber());
+            send(request);
+        }
 
-        send(request);
     }
 
     public void sendAuthorizeRequest(String idToken) {
@@ -352,8 +354,8 @@ public class FakeChargePoint {
         if (!mockChargingActiveSessions.isEmpty()) {
             for (MockChargingSession session : mockChargingActiveSessions) {
                 final String chargePoint = session.getChargePointOcppId();
-                final Long connectorId = connectorServices.findConnector(Long.valueOf(chargePoint));
-                connectorServices.setStatusCharge(Long.valueOf(chargePoint));
+                final Long connectorId = mockConnectorServices.findConnector(Long.valueOf(chargePoint));
+                mockConnectorServices.setStatusCharge(Long.valueOf(chargePoint));
                 try {
                     StatusNotificationRequest request =
                             core.createStatusNotificationRequest(Math.toIntExact(connectorId), ChargePointErrorCode.NoError, ChargePointStatus.Charging);

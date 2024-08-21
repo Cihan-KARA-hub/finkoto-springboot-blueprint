@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 
 @Getter
 @Setter
-public class ChargingSessionDto implements Serializable {
+public class ChargingSessionDto {
     private Long id;
     private int version;
     private OffsetDateTime created;

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ChargePointRepository extends JpaRepository<ChargePoint, Long> {
+public interface MockChargePointRepository extends JpaRepository<ChargePoint, Long> {
    List<ChargePoint>  findByOnline (boolean online);
 
 }

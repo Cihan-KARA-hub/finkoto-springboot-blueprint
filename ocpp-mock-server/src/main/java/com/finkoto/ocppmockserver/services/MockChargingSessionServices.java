@@ -45,18 +45,23 @@ public class MockChargingSessionServices {
         if (mockChargingSession.getCurrMeter() == null) {
             mockChargingSession.setCurrMeter("0");
         }
-        random += Integer.parseInt(mockChargingSession.getCurrMeter());
+        random = random + Integer.parseInt(mockChargingSession.getCurrMeter());
         mockChargingSession.setCurrMeter(String.valueOf(random));
         return String.valueOf(random);
     }
 
     @Transactional
-    public void remoteStopTransactionRequest(int mockId) {
-        MockChargingSession mockChargingSession = mockChargingSessionRepository.findById((long) mockId).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + mockId + " not found."));
-        mockChargingSession.setStatus(SessionStatus.FINISHED);
-        mockChargingSession.setEndTime(OffsetDateTime.now());
-        mockChargingSession.setMeterStop(Integer.valueOf(mockChargingSession.getCurrMeter()));
-        mockChargingSessionRepository.save(mockChargingSession);
+    public void remoteStopTransactionRequest(int idTag ) {
+        String id = String.valueOf(idTag);
+        MockChargingSession mockChargingSession = mockChargingSessionRepository.findByIdTag(id).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
+        if (mockChargingSession.getStatus() == SessionStatus.ACTIVE) {
+            mockChargingSession.setStatus(SessionStatus.FINISHED);
+            mockChargingSession.setEndTime(OffsetDateTime.now());
+            mockChargingSession.setMeterStop(Integer.valueOf(mockChargingSession.getCurrMeter()));
+            mockChargingSessionRepository.save(mockChargingSession);
+        } else {
+            System.out.println("remote stop transaction not exist");
+        }
 
     }
 

@@ -61,23 +61,30 @@ public class ChargingSessionService {
         chargingSession.setChargePointOcppId(ocppId);
         chargingSessionRepository.save(chargingSession);
     }
+
     @Transactional
-    public void  handleMeterValuesRequest(String meterValue){
+    public void handleMeterValuesRequest(String meterValue) {
         chargingSessionRepository.findByStatus(SessionStatus.ACTIVE).forEach(chargingSession -> {
-            if(chargingSession.getCurrMeter()!=null){
-                int meterValues = Integer.parseInt(chargingSession.getCurrMeter())+ Integer.parseInt(meterValue);
+            if (chargingSession.getCurrMeter() != null) {
+                int meterValues = Integer.parseInt(chargingSession.getCurrMeter()) + Integer.parseInt(meterValue);
                 chargingSession.setCurrMeter(String.valueOf(meterValues));
+                chargingSessionRepository.save(chargingSession);
+            } else {
+                chargingSession.setCurrMeter("0");
                 chargingSessionRepository.save(chargingSession);
             }
         });
     }
+
     @Transactional
-    public void remoteStop(String idTag ,int connectorId,String ocppId){
-      ChargingSession session=  chargingSessionRepository.findByIdTag( idTag);
-      if(session!=null){
-          session.setStatus(SessionStatus.FINISHED);
-          session.setEndTime(OffsetDateTime.now());
-          centralSystem.sendRemoteStopTransactionRequest(session.getChargePointOcppId(), session.getConnectorId());
-      }
+    public void remoteStop( String ocppId, int connectorId) {
+        ChargingSession session = chargingSessionRepository.findByChargePointOcppId(ocppId);
+        if (session.getConnectorId() == connectorId && session.getStatus() == SessionStatus.ACTIVE && session.getChargePointOcppId().equals(ocppId)) {
+            session.setStatus(SessionStatus.FINISHED);
+            session.setEndTime(OffsetDateTime.now());
+            int value = Integer.parseInt(session.getCurrMeter());
+            session.setMeterStop(value);
+            centralSystem.sendRemoteStopTransactionRequest(session.getChargePointOcppId(), session.getIdTag());
+        }
     }
 }

@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface ChargingSessionRepository extends JpaRepository<ChargingSession, Long> {
     List<ChargingSession> findByStatus(SessionStatus status);
-    ChargingSession findByIdTag(String idTag);
+    ChargingSession findByChargePointOcppId(String idTag);
 }

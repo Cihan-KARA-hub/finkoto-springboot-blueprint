@@ -4,8 +4,9 @@ package com.finkoto.chargestation.services;
 import com.finkoto.chargestation.api.dto.ChargePointDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargePointMapper;
+import com.finkoto.chargestation.model.ChargeHardwareSpec;
 import com.finkoto.chargestation.model.ChargePoint;
-import com.finkoto.chargestation.ocpp.OCPPCentralSystem;
+import com.finkoto.chargestation.repository.ChargeHardwareSpecRepository;
 import com.finkoto.chargestation.repository.ChargePointRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -15,15 +16,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
 @RequiredArgsConstructor
 @Service
 public class ChargePointService {
-    private final OCPPCentralSystem centralSystem;
+
     private final ChargePointRepository chargePointRepository;
     private final ChargePointMapper chargePointMapper;
+    private final ChargeHardwareSpecRepository chargeHardwareSpecRepository;
+
 
     @Transactional
     public PageableResponseDto<ChargePointDto> getAll(Pageable pageable) {
@@ -38,6 +42,7 @@ public class ChargePointService {
         chargePointMapper.toEntity(newChargePoint, chargePointDto);
         chargePointRepository.save(newChargePoint);
     }
+
 
     @Transactional
     public ChargePointDto update(Long id, ChargePointDto chargePointDto) {
@@ -81,9 +86,19 @@ public class ChargePointService {
         }
     }
 
+    //Online charge pointlerin ocppId'lerini listeler
+    public List<String> onlineOcppIdList() {
+        List<String> ocppIdList = new ArrayList<>();
+        final List<ChargePoint> chargePointsList = chargePointRepository.findByOnline(true);
+        chargePointsList.forEach(chargePoint -> ocppIdList.add(chargePoint.getOcppId()));
+        return ocppIdList;
+    }
+
     @Transactional
     public void handleHeartbeatRequest(String ocppId) {
         ChargePoint chargePoint = findByOcppId(ocppId);
         chargePoint.setLastHealthChecked(OffsetDateTime.now());
     }
+
+
 }

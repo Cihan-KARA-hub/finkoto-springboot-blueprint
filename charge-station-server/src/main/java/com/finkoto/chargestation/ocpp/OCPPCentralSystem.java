@@ -52,12 +52,6 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     @Value("${websocket.host}")
     private String webSocketHost;
 
-    @PostConstruct
-    public void startServer() {
-        this.server = new JSONServer(new ServerCoreProfile(this));
-        server.open(webSocketHost, webSocketPort, createServerEvents());
-    }
-
     @Lazy
     @Autowired
     public void setChargingSessionService(ChargingSessionService chargingSessionService) {
@@ -68,6 +62,12 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     @Autowired
     public void setChargePointService(ChargePointService chargePointService) {
         this.chargePointService = chargePointService;
+    }
+
+    @PostConstruct
+    public void startServer() {
+        this.server = new JSONServer(new ServerCoreProfile(this));
+        server.open(webSocketHost, webSocketPort, createServerEvents());
     }
 
     private ServerEvents createServerEvents() {
@@ -151,11 +151,10 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
 
     @Override
     public MeterValuesConfirmation handleMeterValuesRequest(UUID sessionIndex, MeterValuesRequest request) {
-        //TODO Charge sessions a kaydet
         Arrays.stream(request.getMeterValue()).findFirst().flatMap(meterValue -> Arrays.stream(meterValue.getSampledValue()).findFirst()).ifPresent(sampledValue -> {
             String value = sampledValue.getValue();
             chargingSessionService.handleMeterValuesRequest(value);
-            System.out.println(value +"meter value");
+            System.out.println(value + "meter value");
 
         });
         System.out.println(request);
@@ -177,15 +176,14 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
         System.out.println(request);
         // ... handle event
-
         return new StatusNotificationConfirmation(); // returning null means unsupported feature
     }
 
     @Override
     public StopTransactionConfirmation handleStopTransactionRequest(UUID sessionIndex, StopTransactionRequest request) {
         System.out.println(request);
-        // ... handle event
-        return null; // returning null means unsupported feature
+        chargingSessionService.remoteStop(request.getIdTag(), request.getTransactionId());
+        return new StopTransactionConfirmation();
     }
 
     public void sendChangeAvailabilityRequest(String ocppId, int connectorId, AvailabilityType type) {
@@ -253,9 +251,9 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
-    public void sendRemoteStopTransactionRequest(String ocppId, int transactionId) {
-        final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(transactionId);
-        request.setTransactionId(transactionId);
+    public void sendRemoteStopTransactionRequest(String ocppId, String idTag) {
+        int id = Integer.parseInt(idTag);
+        final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(id);
         send(ocppId, request).whenComplete((confirmation, throwable) -> {
             if (throwable != null) {
                 log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);

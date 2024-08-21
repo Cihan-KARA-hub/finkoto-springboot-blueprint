@@ -24,7 +24,10 @@ spring:
         public-paths: /v1/users/user-token
         jwt:
           jwk-set-uri: http://localhost:8180/realms/dev/protocol/openid-connect/certs
-
+  liquibase:
+    change-log: classpath*:/db/changelog/db.changelog-master.yaml
+    enabled: true
+    default-schema: public
 # Keycloak Ayarları
 keycloak:
   auth-server-url: http://localhost:8180
@@ -47,9 +50,6 @@ springdoc:
   oAuthFlow:
     authorizationUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/auth
     tokenUrl: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
-liquibase:
-  change-log: classpath:/db/changelog/db.changelog-master.yaml
-  default-schema: public
 websocket:
   port: 8443
   host: localhost

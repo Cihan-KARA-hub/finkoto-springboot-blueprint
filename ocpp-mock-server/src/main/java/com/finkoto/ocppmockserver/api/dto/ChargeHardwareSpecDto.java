@@ -1,4 +1,4 @@
-package com.finkoto.chargestation.api.dto;
+package com.finkoto.ocppmockserver.api.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -9,6 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChargeHardwareSpecDto {
+
 
     private Long id;
 
@@ -47,4 +48,5 @@ public class ChargeHardwareSpecDto {
     @NotEmpty
     @Size(min = 1, max = 25)
     private String chargeBoxSerialNumber;
+
 }

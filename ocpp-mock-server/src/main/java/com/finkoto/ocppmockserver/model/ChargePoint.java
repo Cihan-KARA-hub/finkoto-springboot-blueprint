@@ -1,9 +1,7 @@
 package com.finkoto.ocppmockserver.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -14,12 +12,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(name = "charge_point")
+@Table(name = "mock_charge_point")
 public class ChargePoint {
 
     @Id
@@ -62,8 +58,11 @@ public class ChargePoint {
     @OneToMany(mappedBy = "chargePoint", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Connector> connectors = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "chargePoint", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "chargePoint")
     private ChargeHardwareSpec chargeHardwareSpec;
+
+
 
     public void addConnector(Connector connector) {
         connector.setChargePoint(this);
@@ -74,7 +73,6 @@ public class ChargePoint {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         ChargePoint that = (ChargePoint) o;
         return ocppId.equals(that.ocppId);
     }

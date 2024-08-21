@@ -41,8 +41,8 @@ public class ChargingSessionController {
     }
 
     @PutMapping("/stop")
-    public ResponseEntity<ChargingSessionDto> stop(@RequestParam String idTag,@RequestParam int connectorId,@RequestParam String occpId) {
-        chargingSessionService.remoteStop(idTag,connectorId,occpId);
+    public ResponseEntity<ChargingSessionDto> stop(@RequestParam String occpId,@RequestParam int connectorId) {
+        chargingSessionService.remoteStop(occpId,connectorId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 }

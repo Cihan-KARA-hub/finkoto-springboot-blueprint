@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @EnableScheduling
 public class OcppMockServerApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(OcppMockServerApplication.class, args);
     }
