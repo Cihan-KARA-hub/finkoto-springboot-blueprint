@@ -3,17 +3,16 @@ package com.finkoto.ocppmockserver.services;
 import com.finkoto.ocppmockserver.api.dto.ChargePointDto;
 import com.finkoto.ocppmockserver.api.dto.PageableResponseDto;
 import com.finkoto.ocppmockserver.api.mapper.ChargePointMapper;
-import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import com.finkoto.ocppmockserver.model.ChargePoint;
 import com.finkoto.ocppmockserver.repository.MockChargeHardwareRepository;
 import com.finkoto.ocppmockserver.repository.MockChargePointRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

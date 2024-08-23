@@ -21,7 +21,7 @@ public abstract class ConnectorMapper {
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "created", ignore = true)
     @Mapping(target = "updated", ignore = true)
-    public abstract void toEntity(@MappingTarget  Connector connector, ConnectorDto connectorDto);
+    public abstract Connector toEntity(@MappingTarget  Connector connector, ConnectorDto connectorDto);
 
 
 }

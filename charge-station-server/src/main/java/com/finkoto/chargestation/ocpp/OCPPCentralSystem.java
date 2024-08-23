@@ -131,22 +131,20 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                 request.getChargePointVendor() + " \n");
 
         System.out.println(confirmation);
-        return confirmation; // returning null means unsupported feature
+        return confirmation;
     }
 
     @Override
     public DataTransferConfirmation handleDataTransferRequest(UUID sessionIndex, DataTransferRequest request) {
-        System.out.println(request);
-
-        return null; // returning null means unsupported feature
+        System.out.println(request.getData());
+        return new DataTransferConfirmation(DataTransferStatus.Accepted);
     }
 
     @Override
     public HeartbeatConfirmation handleHeartbeatRequest(UUID sessionIndex, HeartbeatRequest request) {
         System.out.println(request);
-        // ... handle event
         chargePointService.handleHeartbeatRequest(getOcppId(sessionIndex));
-        return new HeartbeatConfirmation(ZonedDateTime.now()); // returning null means unsupported feature
+        return new HeartbeatConfirmation(ZonedDateTime.now());
     }
 
     @Override
@@ -158,32 +156,44 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
 
         });
         System.out.println(request);
-        return new MeterValuesConfirmation(); // returning null means unsupported feature
+        return new MeterValuesConfirmation();
     }
 
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
-        List<ChargingSession> sessionList = chargingSessionService.findByStatus(SessionStatus.NEW);
-        for (ChargingSession session : sessionList) {
-            ChargingSession sessionInd = chargingSessionService.activateNewChargingSession(session.getId(), session.getConnectorId());
-            new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Accepted), Math.toIntExact(sessionInd.getId()));
+
+        final Optional<ChargingSession> optional = chargingSessionService.findNewChargingSession(getOcppId(sessionIndex), request.getConnectorId(), request.getIdTag(), SessionStatus.NEW);
+        if (optional.isEmpty()) {
+            return new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Invalid), 0);
+        } else {
+            final ChargingSession chargingSession = optional.get();
+            chargingSessionService.activateNewChargingSession(chargingSession.getId(), request.getMeterStart());
+            final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
+            return new StartTransactionConfirmation(idTagInfo, Math.toIntExact(chargingSession.getId()));
         }
-        return handleStartTransactionRequest(sessionIndex, request);
     }
 
     @Override
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
         System.out.println(request);
-        // ... handle event
-        return new StatusNotificationConfirmation(); // returning null means unsupported feature
+        return new StatusNotificationConfirmation();
     }
 
     @Override
     public StopTransactionConfirmation handleStopTransactionRequest(UUID sessionIndex, StopTransactionRequest request) {
-        System.out.println(request);
-        chargingSessionService.remoteStop(request.getIdTag(), request.getTransactionId());
-        return new StopTransactionConfirmation();
+        request.getTransactionId();
+        final Optional<ChargingSession> optional = chargingSessionService.findById(request.getTransactionId());
+        if (optional.isEmpty()) {
+            new IdTagInfo(AuthorizationStatus.Invalid);
+            return new StopTransactionConfirmation();
+        }
+        System.out.println(request.getTransactionId());
+        chargingSessionService.handleStopTransactionRequest(request.getTransactionId());
+        final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
+        StopTransactionConfirmation confirmation = new StopTransactionConfirmation();
+        confirmation.setIdTagInfo(idTagInfo);
+        return confirmation;
     }
 
     public void sendChangeAvailabilityRequest(String ocppId, int connectorId, AvailabilityType type) {
@@ -220,16 +230,26 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     }
 
     public void sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
-        chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
-        final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
-        request.setConnectorId(connectorId);
-        send(ocppId, request).whenComplete((confirmation, throwable) -> {
-            if (throwable != null) {
-                log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);
-            } else {
-                log.info("Remote start transaction successful for charge point: {}", ocppId);
-            }
-        });
+        // burada active session varsa  yeni bir session oluşturmayacak
+        boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
+        if (check) {
+            log.error("Remote start for charging point failed charging point active");
+        } else {
+            chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
+
+            final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
+            request.setConnectorId(connectorId);
+            request.setIdTag(idTag);
+            request.setConnectorId(connectorId);
+            send(ocppId, request).whenComplete((confirmation, throwable) -> {
+                if (throwable != null) {
+                    log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);
+                } else {
+                    log.info("Remote start transaction successful for charge point: {}", ocppId);
+                }
+            });
+        }
+
     }
 
     public void sendRemoteStartTransactionWithProfileRequest(String ocppId, int connectorId, String idTag) {
@@ -251,14 +271,19 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
+    //--------------------- ilk burası
     public void sendRemoteStopTransactionRequest(String ocppId, String idTag) {
+
         int id = Integer.parseInt(idTag);
+
         final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(id);
+
         send(ocppId, request).whenComplete((confirmation, throwable) -> {
             if (throwable != null) {
-                log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);
+                //NULL GELDİ
+                log.error("Remote stop transaction failed for charge point: {}", ocppId, throwable);
             } else {
-                log.info("Remote start transaction successful for charge point: {}", ocppId);
+                log.info("Remote stop transaction successful for charge point: {}", ocppId);
             }
         });
     }

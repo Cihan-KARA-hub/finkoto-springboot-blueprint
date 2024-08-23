@@ -5,6 +5,7 @@ import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ConnectorMapper;
 import com.finkoto.chargestation.model.ChargePoint;
 import com.finkoto.chargestation.model.Connector;
+import com.finkoto.chargestation.model.enums.ConnectorStatus;
 import com.finkoto.chargestation.repository.ChargePointRepository;
 import com.finkoto.chargestation.repository.ConnectorRepository;
 import jakarta.transaction.Transactional;
@@ -47,8 +48,8 @@ public class ConnectorService {
         Connector connector = new Connector();
         connectorMapper.toEntity(connector, connectorDto);
         connector.addChargePoint(chargePoint);
-        final Connector newConnector = connectorRepository.save(connector);
-        return connectorMapper.toDto(newConnector);
+        connector = connectorRepository.save(connector);
+        return connectorMapper.toDto(connector);
     }
 
     @Transactional
@@ -63,9 +64,33 @@ public class ConnectorService {
         final Connector newConnector = connectorRepository.save(connector);
         return connectorMapper.toDto(newConnector);
     }
+
+//    @Transactional
+//    public boolean statusActivateNewChargingSession(int id) {
+//        Long idx = (long) id;
+//        Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
+//        if (connector.getStatus() == ConnectorStatus.Finishing || connector.getStatus() == ConnectorStatus.Available || connector.getStatus() == ConnectorStatus.Preparing) {
+//            connector.setStatus(ConnectorStatus.Charging);
+//            connectorRepository.save(connector);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//    }
+
     @Transactional
-    public Long   findIdByChargePointId(Long chargePointId){
-        return connectorRepository.findIdByChargePointId(chargePointId);
+    public boolean statusHandleStopTransactionRequest(int id) {
+        Long idx = (long) id;
+        Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
+        if (connector.getStatus() == ConnectorStatus.Charging) {
+            connector.setStatus(ConnectorStatus.Finishing);
+            connectorRepository.save(connector);
+            return true;
+        } else {
+            connector.setStatus(ConnectorStatus.Faulted);
+            connectorRepository.save(connector);
+            return false;
+        }
     }
 
 }

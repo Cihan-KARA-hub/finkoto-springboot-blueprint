@@ -49,10 +49,10 @@ public class ChargingSession {
     private Integer meterStop;
 
     @Column(name = "unit", length = 30)
-    private String unit ="Wh";
+    private String unit = "Wh";
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "enum('FAILED','FINISHED','ACTIVE','CANCELED','NEW') default 'NEW'")
+    @Column(name = "status", nullable = false, columnDefinition = "enum('FAILED','FINISHED','FINISHING','ACTIVE','CANCELED','NEW') default 'NEW'")
     private SessionStatus status = SessionStatus.NEW;
 
     @Enumerated(EnumType.STRING)
@@ -82,10 +82,6 @@ public class ChargingSession {
 
     @Column(name = "unplug_time")
     private OffsetDateTime unplugTime;
-
-    /*@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "id")
-    private Connector connector;*/
 
     @Column(name = "charge_point_ocpp_id")
     private String chargePointOcppId;

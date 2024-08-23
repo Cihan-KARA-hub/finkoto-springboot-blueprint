@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MockConnectorRepository extends JpaRepository<Connector, Long> {
     Long findIdByChargePointId(Long chargePointId);
+
     Connector findStatusByChargePointId(Long chargePointId);
+
     Page<Connector> findAllByChargePointId(Pageable pageable, Long chargePointId);
 }

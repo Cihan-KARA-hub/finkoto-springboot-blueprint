@@ -4,7 +4,6 @@ package com.finkoto.chargestation.services;
 import com.finkoto.chargestation.api.dto.ChargePointDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargePointMapper;
-import com.finkoto.chargestation.model.ChargeHardwareSpec;
 import com.finkoto.chargestation.model.ChargePoint;
 import com.finkoto.chargestation.repository.ChargeHardwareSpecRepository;
 import com.finkoto.chargestation.repository.ChargePointRepository;

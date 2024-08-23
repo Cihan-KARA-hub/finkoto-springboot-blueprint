@@ -35,14 +35,14 @@ public class ChargingSessionController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> start(@RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String userId) {
-        centralSystem.sendRemoteStartTransactionRequest(ocppId, connectorId, userId);
+    public ResponseEntity<Void> start(@RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String idTag) {
+        centralSystem.sendRemoteStartTransactionRequest(ocppId, connectorId, idTag);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PutMapping("/stop")
-    public ResponseEntity<ChargingSessionDto> stop(@RequestParam String occpId,@RequestParam int connectorId) {
-        chargingSessionService.remoteStop(occpId,connectorId);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    @PutMapping("/stop/{idTag}")
+    public ResponseEntity<Void> stop(@RequestParam String ocppId, @RequestParam int connectorId, @PathVariable String idTag) {
+        chargingSessionService.sendRemoteStopTransactionRequest(ocppId,connectorId,idTag);
+        return ResponseEntity.ok().build();
     }
 }

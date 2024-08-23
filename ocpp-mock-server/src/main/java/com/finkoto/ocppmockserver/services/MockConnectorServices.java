@@ -64,6 +64,33 @@ public class MockConnectorServices {
         return connectorMapper.toDto(newConnector);
     }
 
+
+    @Transactional
+    public boolean statusActivateNewChargingSession(int id) {
+        Long idx = (long) id;
+        Connector connector = mockConnectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
+        if (connector.getStatus() == ConnectorStatus.Finishing || connector.getStatus() == ConnectorStatus.Available || connector.getStatus() == ConnectorStatus.Preparing) {
+            connector.setStatus(ConnectorStatus.Charging);
+            mockConnectorRepository.save(connector);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean statusRemoteStopTransactionRequest(int id) {
+        Long idx = (long) id;
+        Connector connector = mockConnectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
+        if (connector.getStatus() == ConnectorStatus.Charging) {
+            connector.setStatus(ConnectorStatus.Finishing);
+            mockConnectorRepository.save(connector);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     @Transactional
     public Long findConnector(Long id) {
         return mockConnectorRepository.findIdByChargePointId(id);

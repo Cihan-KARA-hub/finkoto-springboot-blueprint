@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface MockChargingSessionRepository extends JpaRepository<MockChargingSession, Long> {
     List<MockChargingSession> findByStatus(SessionStatus status);
     Optional<MockChargingSession> findByIdTag(String idTag);
+
+    Optional<MockChargingSession> findByChargePointOcppIdAndConnectorIdAndStatus(String chargePointOcppId, int connectorId, SessionStatus status);
 }

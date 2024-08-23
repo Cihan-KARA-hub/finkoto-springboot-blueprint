@@ -18,4 +18,5 @@ public class ChargePointDto {
     private OffsetDateTime lastDisconnected;
     private OffsetDateTime lastHealthChecked;
     private ChargeHardwareSpecDto chargeHardwareSpec;
+
 }

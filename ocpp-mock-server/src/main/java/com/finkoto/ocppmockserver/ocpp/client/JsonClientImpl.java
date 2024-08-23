@@ -13,10 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -26,7 +23,7 @@ public class JsonClientImpl {
     private final MockConnectorServices mockConnectorServices;
     private final MockChargePointServices mockChargePointServices;
     private final Map<String, FakeChargePoint> connections = new HashMap<>();
-    private final Map<String, FakeChargePoint> lostConnection = new HashMap<>();
+    private List<ChargePoint> chargePointsLostList = new ArrayList<>();
 
     @Value("${websocket.url}")
     private String webSocketUrl;
@@ -39,12 +36,12 @@ public class JsonClientImpl {
 
     @PostConstruct
     public void startServer() {
-
         mockChargePointServices.findAll().forEach(chargePoint -> {
-                FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices);
-                fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
-                connections.put(chargePoint.getOcppId(), fakeChargePoint);
-                fakeChargePoint.sendBootNotification(chargePoint.getChargeHardwareSpec());
+            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices);
+            fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
+
+            connections.put(chargePoint.getOcppId(), fakeChargePoint);
+            fakeChargePoint.sendBootNotification(chargePoint.getChargeHardwareSpec());
         });
     }
 
@@ -71,6 +68,13 @@ public class JsonClientImpl {
             getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStartTransactionRequest(session.getConnectorId(), session.getIdTag(), session.getMeterStart()));
         }
     }
+    @Scheduled(fixedRate = 10000)
+    public void stopTransactionScheduler() {
+        List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.FINISHING);
+        for (MockChargingSession session : sessions) {
+            mockChargingSessionServices.sendStopTransactionRequest(session.getId());
+            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));        }
+    }
 
     @Scheduled(fixedRate = 10000)
     public void meterValueScheduler() {
@@ -80,5 +84,17 @@ public class JsonClientImpl {
             getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendMeterValuesRequest(session.getConnectorId(), meterValue));
         }
     }
-    //TODO  online olmayanları al  ve bir listede tut 5 dakikada bir  baglanmaya çalışsınlar
+
+    /**
+     * TODO  online olmayanları al  ve bir listede tut 5 dakikada bir  baglanmaya çalışsın
+     */
+    @Scheduled(fixedRate = 50000)
+    public void reconnetScheduler() {
+        chargePointsLostList = mockChargePointServices.findByOnline(false);
+        chargePointsLostList.forEach(chargePoint -> {
+            log.info("reconnecting to " + chargePoint.getOcppId());
+            startServer();
+        });
+
+    }
 }
