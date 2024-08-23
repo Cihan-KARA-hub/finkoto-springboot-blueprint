@@ -47,7 +47,7 @@ public class MockChargingSession {
     private String unit = "Wh";
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 8, nullable = false)
+    @Column(name = "status", length = 9, nullable = false)
     private SessionStatus status = SessionStatus.NEW;
 
     @Column(name = "begin_time")

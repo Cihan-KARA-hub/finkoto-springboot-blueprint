@@ -93,20 +93,18 @@ public class FakeChargePoint {
 
                             @Override
                             public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(RemoteStartTransactionRequest request) {
-
                                 log.info(request.toString());
                                 receivedRequest = request;
-                                mockChargingSessionServices.handleRemoteStartTransactionRequest(chargePointOcppId, request.getConnectorId(), request.getIdTag());
-                                return new RemoteStartTransactionConfirmation(RemoteStartStopStatus.Accepted);
+                                RemoteStartStopStatus response = mockChargingSessionServices.handleRemoteStartTransactionRequest(chargePointOcppId, request.getConnectorId(), request.getIdTag());
+                                return new RemoteStartTransactionConfirmation(response);
                             }
 
                             @Override
-                            public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(
-                                    RemoteStopTransactionRequest request) {
+                            public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(RemoteStopTransactionRequest request) {
+                                //ilk buraya geliyor
                                 receivedRequest = request;
-                                int idTag = request.getTransactionId();
-                                mockChargingSessionServices.remoteStopTransactionRequest(idTag);
-                                return new RemoteStopTransactionConfirmation(RemoteStartStopStatus.Accepted);
+                                RemoteStartStopStatus response = mockChargingSessionServices.remoteStopTransactionRequest(request.getTransactionId());
+                                return new RemoteStopTransactionConfirmation(response);
                             }
 
                             @Override
@@ -324,8 +322,10 @@ public class FakeChargePoint {
         send(request);
     }
 
-    public void sendStopTransactionRequest() {
-        StopTransactionRequest request = core.createStopTransactionRequest(42, ZonedDateTime.now(), 42);
+    public void sendStopTransactionRequest(Integer meterStop, long id) {
+        // finished  meter stop ve transıd gönderecegiz
+        String value = mockChargingSessionServices.findByCurrMeterValue(id);
+        StopTransactionRequest request = core.createStopTransactionRequest(Integer.parseInt(value), ZonedDateTime.now(), Math.toIntExact(id));
         send(request);
     }
 
@@ -347,9 +347,6 @@ public class FakeChargePoint {
     }
 
     public void sendStatusNotificationRequest() {
-        //TODO StatusNotificationRequest { "ocppMessageId": "eb01135f-18a7-45f7-b637-1c9c6b1a88d1", "connectorId": 1, "errorCode": "NoError",
-        // "info": null, "status": "Charging", "timestamp": "2024-08-12T11:15:36Z", "vendorId": null, "vendorErrorCode": null }
-
         List<MockChargingSession> mockChargingActiveSessions = mockChargingSessionServices.findByStatus(SessionStatus.ACTIVE);
         if (!mockChargingActiveSessions.isEmpty()) {
             for (MockChargingSession session : mockChargingActiveSessions) {
