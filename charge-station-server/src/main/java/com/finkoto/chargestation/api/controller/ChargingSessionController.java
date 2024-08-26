@@ -4,6 +4,7 @@ import com.finkoto.chargestation.api.dto.ChargingSessionDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.ocpp.OCPPCentralSystem;
 import com.finkoto.chargestation.services.ChargingSessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -24,25 +25,24 @@ public class ChargingSessionController {
 
 
     @GetMapping
-    public ResponseEntity<PageableResponseDto<ChargingSessionDto>> getAllChargingSessions(
-            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
+    public ResponseEntity<PageableResponseDto<ChargingSessionDto>> getAllChargingSessions(@Valid @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(chargingSessionService.getAll(pageable));
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ChargingSessionDto> getChargeSessionsById(@PathVariable Long id) {
+    public ResponseEntity<ChargingSessionDto> getChargeSessionsById(@Valid @PathVariable Long id) {
         return ResponseEntity.ok(chargingSessionService.findById(id));
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> start(@RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String idTag) {
+    public ResponseEntity<Void> start(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String idTag) {
         centralSystem.sendRemoteStartTransactionRequest(ocppId, connectorId, idTag);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PutMapping("/stop/{idTag}")
-    public ResponseEntity<Void> stop(@RequestParam String ocppId, @RequestParam int connectorId, @PathVariable String idTag) {
-        chargingSessionService.sendRemoteStopTransactionRequest(ocppId,connectorId,idTag);
+    public ResponseEntity<Void> stop(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @PathVariable String idTag) {
+        chargingSessionService.sendRemoteStopTransactionRequest(ocppId, connectorId, idTag);
         return ResponseEntity.ok().build();
     }
 }

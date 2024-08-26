@@ -229,11 +229,12 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
-    public void sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
+    public boolean sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
         // burada active session varsa  yeni bir session oluşturmayacak
         boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
         if (check) {
             log.error("Remote start for charging point failed charging point active");
+            return  false ;
         } else {
             chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
 
@@ -248,6 +249,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                     log.info("Remote start transaction successful for charge point: {}", ocppId);
                 }
             });
+            return true;
         }
 
     }
