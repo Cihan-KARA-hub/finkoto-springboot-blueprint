@@ -105,44 +105,28 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                 -> new IllegalStateException("Can not find session with ocppId " + ocppId + "..."));
     }
 
+    // TODO aşağıdaki handle ile başlayan tüm methodların içine slf4j ile info logu bastıralım.
     @Override
     public AuthorizeConfirmation handleAuthorizeRequest(UUID sessionIndex, AuthorizeRequest request) {
-        System.out.println(request);
-        // ... handle event
         IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
         idTagInfo.setExpiryDate(ZonedDateTime.now());
         idTagInfo.setParentIdTag("test");
         idTagInfo.setStatus(AuthorizationStatus.Accepted);
-
         return new AuthorizeConfirmation(idTagInfo);
     }
 
     @Override
     public BootNotificationConfirmation handleBootNotificationRequest(UUID sessionIndex, BootNotificationRequest request) {
-        System.out.println(request);
-        BootNotificationConfirmation confirmation = new BootNotificationConfirmation(ZonedDateTime.now(), 0, RegistrationStatus.Accepted);
-        System.out.println(request.getChargePointModel() + " \n" +
-                request.getChargePointSerialNumber() + "  \n" +
-                request.getMeterType() + " \n" +
-                request.getImsi() + " \n" +
-                request.getIccid() + " \n" +
-                request.getFirmwareVersion() + " \n" +
-                request.getMeterSerialNumber() + " \n" +
-                request.getChargePointVendor() + " \n");
-
-        System.out.println(confirmation);
-        return confirmation;
+        return new BootNotificationConfirmation(ZonedDateTime.now(), 0, RegistrationStatus.Accepted);
     }
 
     @Override
     public DataTransferConfirmation handleDataTransferRequest(UUID sessionIndex, DataTransferRequest request) {
-        System.out.println(request.getData());
         return new DataTransferConfirmation(DataTransferStatus.Accepted);
     }
 
     @Override
     public HeartbeatConfirmation handleHeartbeatRequest(UUID sessionIndex, HeartbeatRequest request) {
-        System.out.println(request);
         chargePointService.handleHeartbeatRequest(getOcppId(sessionIndex));
         return new HeartbeatConfirmation(ZonedDateTime.now());
     }
@@ -152,17 +136,13 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         Arrays.stream(request.getMeterValue()).findFirst().flatMap(meterValue -> Arrays.stream(meterValue.getSampledValue()).findFirst()).ifPresent(sampledValue -> {
             String value = sampledValue.getValue();
             chargingSessionService.handleMeterValuesRequest(value);
-            System.out.println(value + "meter value");
-
         });
-        System.out.println(request);
         return new MeterValuesConfirmation();
     }
 
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
-
         final Optional<ChargingSession> optional = chargingSessionService.findNewChargingSession(getOcppId(sessionIndex), request.getConnectorId(), request.getIdTag(), SessionStatus.NEW);
         if (optional.isEmpty()) {
             return new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Invalid), 0);
@@ -176,7 +156,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
 
     @Override
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
-        System.out.println(request);
+        // TODO connector tablosundaki status alanını güncelleyelim.
         return new StatusNotificationConfirmation();
     }
 
@@ -188,7 +168,6 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
             new IdTagInfo(AuthorizationStatus.Invalid);
             return new StopTransactionConfirmation();
         }
-        System.out.println(request.getTransactionId());
         chargingSessionService.handleStopTransactionRequest(request.getTransactionId());
         final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
         StopTransactionConfirmation confirmation = new StopTransactionConfirmation();
@@ -229,15 +208,20 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
-    public boolean sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
-
+    public void sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
         boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
         if (check) {
+            // TODO bu kontrolü servis üzerinde yapalım
+            // TODO ChargePointNotAvailable runtime exception oluşturup fırlatalım,
+            // TODO @RestControllerAdvice ile burada fırlatılan exception yakalanıp 409 response code dönelim.
             log.error("Remote start for charging point failed charging point active");
-            return false;
         } else {
+            // TODO charging_session tablosundan id_tag kolonunu kaldıralım.
+            // TODO charging_session tablosunun id alanını idTag alanında yollayalım.
+            // TODO charging_session.id = mock_charging_session.id_tag iki tablo arasındaki ilişki bu şekilde olacak.
             chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
             final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
+            // TODO gereksiz setter'ları silelim.
             request.setConnectorId(connectorId);
             request.setIdTag(idTag);
             request.setConnectorId(connectorId);
@@ -250,7 +234,6 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                     log.info("Remote start transaction successful for charge point: {}", ocppId);
                 }
             });
-            return true;
         }
     }
 
@@ -276,7 +259,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
 
     //--------------------- ilk burası
     public void sendRemoteStopTransactionRequest(String ocppId, String idTag) {
-
+        // TODO bu id charging_session tablosunun id si olacak.
         int id = Integer.parseInt(idTag);
 
         final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest(id);

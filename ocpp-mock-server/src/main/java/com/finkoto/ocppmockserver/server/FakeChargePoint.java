@@ -50,27 +50,28 @@ public class FakeChargePoint {
         this.mockChargingSessionServices = mockChargingSessionServices;
         this.mockConnectorServices = mockConnectorServices;
         this.chargePointOcppId = chargePointOcppId;
+        // TODO aşağıdaki handle ile başlayan tüm methodların içine slf4j ile info logu bastıralım.
         core =
                 new ClientCoreProfile(
                         new ClientCoreEventHandler() {
                             @Override
-                            public ChangeAvailabilityConfirmation handleChangeAvailabilityRequest(
-                                    ChangeAvailabilityRequest request) {
+                            public ChangeAvailabilityConfirmation handleChangeAvailabilityRequest(ChangeAvailabilityRequest request) {
                                 receivedRequest = request;
+                                // TODO central system den bu istek tetiklendiğinde connector tablosunun status alanı güncellenmeli.
                                 return new ChangeAvailabilityConfirmation(AvailabilityStatus.Accepted);
                             }
 
                             @Override
-                            public GetConfigurationConfirmation handleGetConfigurationRequest(
-                                    GetConfigurationRequest request) {
+                            public GetConfigurationConfirmation handleGetConfigurationRequest(GetConfigurationRequest request) {
                                 receivedRequest = request;
+                                // TODO bunu en sona bırakalım.
                                 return new GetConfigurationConfirmation();
                             }
 
                             @Override
-                            public ChangeConfigurationConfirmation handleChangeConfigurationRequest(
-                                    ChangeConfigurationRequest request) {
+                            public ChangeConfigurationConfirmation handleChangeConfigurationRequest(ChangeConfigurationRequest request) {
                                 receivedRequest = request;
+                                // TODO bunu en sona bırakalım.
                                 return new ChangeConfigurationConfirmation(ConfigurationStatus.Accepted);
                             }
 
@@ -83,8 +84,7 @@ public class FakeChargePoint {
                             }
 
                             @Override
-                            public DataTransferConfirmation handleDataTransferRequest(
-                                    DataTransferRequest request) {
+                            public DataTransferConfirmation handleDataTransferRequest(DataTransferRequest request) {
                                 receivedRequest = request;
                                 DataTransferConfirmation confirmation = new DataTransferConfirmation(DataTransferStatus.Accepted);
                                 confirmation.setStatus(DataTransferStatus.Accepted);
@@ -101,7 +101,6 @@ public class FakeChargePoint {
 
                             @Override
                             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(RemoteStopTransactionRequest request) {
-                                //ilk buraya geliyor
                                 receivedRequest = request;
                                 RemoteStartStopStatus response = mockChargingSessionServices.remoteStopTransactionRequest(request.getTransactionId());
                                 return new RemoteStopTransactionConfirmation(response);
@@ -114,8 +113,7 @@ public class FakeChargePoint {
                             }
 
                             @Override
-                            public UnlockConnectorConfirmation handleUnlockConnectorRequest(
-                                    UnlockConnectorRequest request) {
+                            public UnlockConnectorConfirmation handleUnlockConnectorRequest(UnlockConnectorRequest request) {
                                 receivedRequest = request;
                                 return new UnlockConnectorConfirmation(UnlockStatus.Unlocked);
                             }
@@ -148,13 +146,9 @@ public class FakeChargePoint {
 
         remoteTrigger =
                 new ClientRemoteTriggerProfile(
-                        new ClientRemoteTriggerEventHandler() {
-                            @Override
-                            public TriggerMessageConfirmation handleTriggerMessageRequest(
-                                    TriggerMessageRequest request) {
-                                receivedRequest = request;
-                                return new TriggerMessageConfirmation(TriggerMessageStatus.Accepted);
-                            }
+                        request -> {
+                            receivedRequest = request;
+                            return new TriggerMessageConfirmation(TriggerMessageStatus.Accepted);
                         });
 
         firmware =
@@ -323,8 +317,8 @@ public class FakeChargePoint {
     }
 
     public void sendStopTransactionRequest(Integer meterStop, long id) {
-        // finished  meter stop ve transıd gönderecegiz
         String value = mockChargingSessionServices.findByCurrMeterValue(id);
+        // TODO mererStop alanını setleyelim
         StopTransactionRequest request = core.createStopTransactionRequest(Integer.parseInt(value), ZonedDateTime.now(), Math.toIntExact(id));
         send(request);
     }
@@ -339,7 +333,6 @@ public class FakeChargePoint {
             DataTransferRequest request = core.createDataTransferRequest(vendorId);
             request.setMessageId(messageId);
             request.setData(data);
-
             send(request);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -401,6 +394,10 @@ public class FakeChargePoint {
         receivedRequest = null;
     }
 
+    public void disconnect() {
+        client.disconnect();
+    }
+
     private void send(Request request) {
         try {
             client
@@ -415,6 +412,7 @@ public class FakeChargePoint {
         }
     }
 
+    // TODO aşağıdaki tüm methodları silelim.
     public boolean hasReceivedBootConfirmation(String status) {
         if (receivedConfirmation instanceof BootNotificationConfirmation)
             return ((BootNotificationConfirmation) receivedConfirmation)
@@ -485,10 +483,6 @@ public class FakeChargePoint {
 
     public boolean hasReceivedSignedFirmwareStatusNotificationConfirmation() {
         return receivedConfirmation instanceof SignedFirmwareStatusNotificationConfirmation;
-    }
-
-    public void disconnect() {
-        client.disconnect();
     }
 
     public boolean hasHandledGetDiagnosticsRequest() {

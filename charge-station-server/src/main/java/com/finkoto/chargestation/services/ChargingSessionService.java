@@ -84,6 +84,8 @@ public class ChargingSessionService {
 
     @Transactional
     public void handleMeterValuesRequest(String meterValue) {
+        // TODO request.getTransactionId() değeri ile charging_session tablosuna id ile sorgu atıp güncelleme yapalım, aksi takdirde aynı anda devam eden şarjlar birbirine karışır.
+        // TODO id ile sorgulama yapacağımız için tek bir kaydı güncelleyeceğiz if-else yapısına gerek yok.
         chargingSessionRepository.findByStatus(SessionStatus.ACTIVE).forEach(chargingSession -> {
             if (chargingSession.getCurrMeter() != null) {
                 int meterValues = Integer.parseInt(chargingSession.getCurrMeter()) + Integer.parseInt(meterValue);
@@ -113,8 +115,9 @@ public class ChargingSessionService {
         chargingSessionRepository.save(chargingSession);
     }
 
+    // TODO bu metodunun adını isActiveSessionExist olarak değiştirelim
     public boolean checkActiveSession(String ocppId, int connectorId, SessionStatus status) {
         Optional<ChargingSession> session = chargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndStatus(ocppId, connectorId, status);
-        return session.isEmpty();
+        return session.isPresent();
     }
 }

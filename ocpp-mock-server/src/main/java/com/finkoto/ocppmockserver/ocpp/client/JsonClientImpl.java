@@ -64,16 +64,28 @@ public class JsonClientImpl {
     public void startTransactionScheduler() {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.NEW);
         for (MockChargingSession session : sessions) {
+            // TODO burada Java nın completabple future ile
+            // TODO mock_connector tablosundaki status alanını Pereparing'e çekip central-system'a sendStatusNotificationRequest atalım.
+            // TODO daha sonra sendStartTransactionRequest atalım
+            // TODO mock_connector tablosundaki status alanını Charging'e çekip central-system'a sendStatusNotificationRequest atalım.
+            // TODO bu 3 işlemi arka arkaya birbirini takip eden 3 admımmış gibi yalaım. 1. adım tamamlanınca 2 ye geçelim, 2 tamamlanınca 3 e geçelim.
             mockChargingSessionServices.activateNewChargingSession(session.getId());
             getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStartTransactionRequest(session.getConnectorId(), session.getIdTag(), session.getMeterStart()));
         }
     }
+
     @Scheduled(fixedRate = 10000)
     public void stopTransactionScheduler() {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.FINISHING);
         for (MockChargingSession session : sessions) {
+            // TODO burada Java nın completabple future ile
+            // TODO mock_connector tablosundaki status alanını Finishing'e çekip central-system'a sendStatusNotificationRequest atalım.
+            // TODO daha sonra sendStopTransactionRequest atalım
+            // TODO mock_connector tablosundaki status alanını Available'e çekip central-system'a sendStatusNotificationRequest atalım.
+            // TODO bu 3 işlemi arka arkaya birbirini takip eden 3 admımmış gibi yalaım. 1. adım tamamlanınca 2 ye geçelim, 2 tamamlanınca 3 e geçelim.
             mockChargingSessionServices.sendStopTransactionRequest(session.getId());
-            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));        }
+            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));
+        }
     }
 
     @Scheduled(fixedRate = 10000)

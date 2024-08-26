@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/charging-Sessions")
+@RequestMapping("/charging-Sessions") // TODO api path lerini lowerCase yapalım
 public class ChargingSessionController {
 
     private final ChargingSessionService chargingSessionService;
-    private final OCPPCentralSystem centralSystem;
+    private final OCPPCentralSystem centralSystem; // TODO controller'lar servisleri'i bilsin, servis üzerinden centralSystem ile iltişime geçelim.
 
 
     @GetMapping
@@ -34,12 +34,15 @@ public class ChargingSessionController {
         return ResponseEntity.ok(chargingSessionService.findById(id));
     }
 
+    // TODO idTag parametresini apiden kaldıralım.
+    // TODO connectorId parametresini apiden kaldıralım, onun yerine connectorOcppId ekleyelim
     @PostMapping("/start")
     public ResponseEntity<Void> start(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String idTag) {
         centralSystem.sendRemoteStartTransactionRequest(ocppId, connectorId, idTag);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    // TODO burada {id} ile şarj işlemini durdurmalıyız. apideki tüm parametreleri silip id ile ilerleyelim
     @PutMapping("/stop/{idTag}")
     public ResponseEntity<Void> stop(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @PathVariable String idTag) {
         chargingSessionService.sendRemoteStopTransactionRequest(ocppId, connectorId, idTag);

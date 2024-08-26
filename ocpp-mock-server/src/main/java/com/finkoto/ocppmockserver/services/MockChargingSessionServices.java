@@ -74,6 +74,7 @@ public class MockChargingSessionServices {
 
     @Transactional
     public void sendStopTransactionRequest(Long id) {
+        // TODO .orElseThrove ekleyelim.
         final Optional<MockChargingSession> optional = mockChargingSessionRepository.findById(id);
         final MockChargingSession mockChargingSession = optional.get();
         mockChargingSession.setStatus(SessionStatus.FINISHED);

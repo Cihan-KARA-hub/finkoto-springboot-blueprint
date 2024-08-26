@@ -15,6 +15,8 @@ public interface ChargingSessionRepository extends JpaRepository<ChargingSession
     Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndIdTagAndStatus(String ocppId, int connector, String idTag, SessionStatus status);
 
     Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndIdTag(String ocppId, int connector, String idTag);
+
+    // TODO bu methodu spring-data exist yapısını kullanarak yapalım
     Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndStatus(String ocppId, int connector, SessionStatus status);
 
     Optional<ChargingSession> findByIdTag(String idTag);
