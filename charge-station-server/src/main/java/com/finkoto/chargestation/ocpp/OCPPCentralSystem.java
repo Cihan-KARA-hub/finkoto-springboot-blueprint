@@ -230,19 +230,15 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     }
 
     public boolean sendRemoteStartTransactionRequest(String ocppId, int connectorId, String idTag) {
-        // burada active session varsa  yeni bir session oluşturmayacak
-        boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
-        if (check) {
-            log.error("Remote start for charging point failed charging point active");
-            return  false ;
-        } else {
-            // burada active session varsa  yeni bir session oluşturmayacak
-        boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
-        if (check) {
-            log.error("Remote start for charging point failed charging point active");
-        } else {chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
 
-            final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);request.setConnectorId(connectorId);
+        boolean check = chargingSessionService.checkActiveSession(ocppId, connectorId, SessionStatus.ACTIVE);
+        if (check) {
+            log.error("Remote start for charging point failed charging point active");
+            return false;
+        } else {
+            chargingSessionService.newChargingSession(ocppId, connectorId, idTag);
+            final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);
+            request.setConnectorId(connectorId);
             request.setIdTag(idTag);
             request.setConnectorId(connectorId);
             request.setIdTag(idTag);
@@ -256,10 +252,8 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
             });
             return true;
         }
-
     }
 
-    }
 
     public void sendRemoteStartTransactionWithProfileRequest(String ocppId, int connectorId, String idTag) {
         final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(idTag);

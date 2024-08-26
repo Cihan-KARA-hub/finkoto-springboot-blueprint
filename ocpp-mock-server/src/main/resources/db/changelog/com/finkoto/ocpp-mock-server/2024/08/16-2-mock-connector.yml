@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 11
+      author: cihan
+      changes:
+        - createTable:
+            tableName: mock_connector
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_point_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ocpp_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_type
+                  type: varchar(2)
+              - column:
+                  name: status
+                  type: varchar(16)
+              - column:
+                  type: int
+                  name: power_factor
+        - addForeignKeyConstraint:
+            baseColumnNames: charge_point_id
+            baseTableName: mock_connector
+            constraintName: fk_connector_charge_point_id
+            referencedColumnNames: id
+            referencedTableName: mock_charge_point
+        - createIndex:
+            indexName: charge_point_id_idx
+            tableName: mock_connector
+            columns:
+              - column:
+                  name: charge_point_id

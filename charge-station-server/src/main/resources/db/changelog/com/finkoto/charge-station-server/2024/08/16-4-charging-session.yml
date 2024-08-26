@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 8
+      author: cihan
+      changes:
+        - createTable:
+            tableName: charging_session
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: meter_start
+                  type: int
+              - column:
+                  name: curr_meter
+                  type: varchar(50)
+              - column:
+                  name: meter_stop
+                  type: int
+              - column:
+                  name: unit
+                  type: varchar(30)
+              - column:
+                  name: status
+                  type: varchar(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: varchar(16)
+              - column:
+                  name: begin_time
+                  type: timestamp
+              - column:
+                  name: end_time
+                  type: timestamp
+              - column:
+                  name: battery_percentage_start
+                  type: varchar(50)
+              - column:
+                  name: battery_percentage
+                  type: varchar(50)
+              - column:
+                  name: consumption
+                  type: decimal(15, 6)
+              - column:
+                  name: active_power
+                  type: decimal(15, 2)
+              - column:
+                  name: active_power_unit
+                  type: varchar(30)
+              - column:
+                  name: unplug_time
+                  type: timestamp
+              - column:
+                  name: charge_point_ocpp_id
+                  type: varchar(30)
+              - column:
+                  name: connector_id
+                  type: int
+              - column:
+                  name: id_tag
+                  type: varchar(50)
+

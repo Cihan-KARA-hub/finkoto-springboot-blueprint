@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: cihan
+      changes:
+        - createTable:
+            tableName: charge_point
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ocpp_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: online
+                  type: number(1)
+                  defaultValueNumeric: '0'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: disabled
+                  type: number(1)
+                  defaultValueNumeric: '0'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_connected
+                  type: timestamp
+              - column:
+                  name: last_disconnected
+                  type: timestamp
+              - column:
+                  name: last_health_checked
+                  type: timestamp
+        - addUniqueConstraint:
+            columnNames: ocpp_id
+            constraintName: charge_point_ocpp_id
+            tableName: charge_point
+
