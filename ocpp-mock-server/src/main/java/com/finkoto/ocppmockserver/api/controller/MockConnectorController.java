@@ -28,13 +28,6 @@ public class MockConnectorController {
     ) {
         return ResponseEntity.ok(connectorService.getAll(pageable, chargePointId));
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ConnectorDto> getConnectorById(@PathVariable Long id) {
-        ConnectorDto dto = connectorService.findById(id);
-        return ResponseEntity.ok(dto);
-    }
-
     @PostMapping
     public ResponseEntity<ConnectorDto> createConnector(@RequestBody ConnectorDto connectorDto) {
         connectorService.create(connectorDto);

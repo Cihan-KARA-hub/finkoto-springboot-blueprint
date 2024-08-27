@@ -9,14 +9,12 @@ import org.apache.http.auth.AuthenticationException;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,21 +30,14 @@ import java.util.Map;
  * 405 ->  Method Not Allowed
  * 406 ->  Not Acceptable
  * 408 ->  The Request Timeout
+ * 409 ->  Conflict
  * 500 ->  Internal Server Error
  * 503 ->  No Service
  * 504 ->  Gateway Timeout
  */
-@ControllerAdvice
-@RestController
-public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+@RestControllerAdvice
+public class CustomResponseEntityExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public final ResponseEntity<Object> handleAllExceptions(Exception ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", "An unexpected error occurred.");
-        errors.put("details", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
 
     @ExceptionHandler(NoContentException.class)
     public final ResponseEntity<Object> handleNoContentException(NoContentException ex, WebRequest request) {
@@ -64,7 +55,6 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-
     @ExceptionHandler(AuthenticationException.class)
     public final ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
@@ -72,7 +62,6 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         errors.put("details", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
     }
-
 
     @ExceptionHandler(ForbiddenException.class)
     public final ResponseEntity<Object> handleForbiddenException(ForbiddenException ex, WebRequest request) {
@@ -90,8 +79,8 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(HttpClientErrorException.MethodNotAllowed.class)
-    public final ResponseEntity<Object> handleMethodNotAllowed(HttpClientErrorException ex, WebRequest request) {
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public final ResponseEntity<Object> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The HTTP method is not allowed for this resource.");
         errors.put("details", ex.getMessage());
@@ -104,6 +93,21 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         errors.put("error", "The requested resource is not acceptable.");
         errors.put("details", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.NOT_ACCEPTABLE);
+    }
+    @ExceptionHandler(HttpClientErrorException.Conflict.class)
+    public final ResponseEntity<Object> handleConflictException(HttpClientErrorException ex, WebRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "The requested resource was not found.");
+        errors.put("details", ex.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public final ResponseEntity<Object> handleAllExceptions(Exception ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "An unexpected error occurred.");
+        errors.put("details", ex.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
@@ -121,4 +125,5 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         errors.put("details", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.GATEWAY_TIMEOUT);
     }
+
 }

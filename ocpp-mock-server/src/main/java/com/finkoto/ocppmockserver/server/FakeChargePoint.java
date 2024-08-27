@@ -1,8 +1,8 @@
 package com.finkoto.ocppmockserver.server;
 
 import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
-import com.finkoto.ocppmockserver.model.MockChargingSession;
-import com.finkoto.ocppmockserver.model.enums.SessionStatus;
+import com.finkoto.ocppmockserver.model.Connector;
+import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
 import com.finkoto.ocppmockserver.services.MockConnectorServices;
 import eu.chargetime.ocpp.CallErrorException;
@@ -17,7 +17,6 @@ import eu.chargetime.ocpp.model.core.*;
 import eu.chargetime.ocpp.model.firmware.*;
 import eu.chargetime.ocpp.model.localauthlist.*;
 import eu.chargetime.ocpp.model.remotetrigger.TriggerMessageConfirmation;
-import eu.chargetime.ocpp.model.remotetrigger.TriggerMessageRequest;
 import eu.chargetime.ocpp.model.remotetrigger.TriggerMessageStatus;
 import eu.chargetime.ocpp.model.reservation.*;
 import eu.chargetime.ocpp.model.securityext.*;
@@ -26,7 +25,7 @@ import eu.chargetime.ocpp.model.smartcharging.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings("CallToPrintStackTrace")
 @Slf4j
@@ -57,6 +56,7 @@ public class FakeChargePoint {
                             public ChangeAvailabilityConfirmation handleChangeAvailabilityRequest(
                                     ChangeAvailabilityRequest request) {
                                 receivedRequest = request;
+                                mockConnectorServices.updateStatus(request.getConnectorId(), ConnectorStatus.Available);
                                 return new ChangeAvailabilityConfirmation(AvailabilityStatus.Accepted);
                             }
 
@@ -64,6 +64,7 @@ public class FakeChargePoint {
                             public GetConfigurationConfirmation handleGetConfigurationRequest(
                                     GetConfigurationRequest request) {
                                 receivedRequest = request;
+                                //TODO bunu en sona bırakalım
                                 return new GetConfigurationConfirmation();
                             }
 
@@ -101,7 +102,6 @@ public class FakeChargePoint {
 
                             @Override
                             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(RemoteStopTransactionRequest request) {
-                                //ilk buraya geliyor
                                 receivedRequest = request;
                                 RemoteStartStopStatus response = mockChargingSessionServices.remoteStopTransactionRequest(request.getTransactionId());
                                 return new RemoteStopTransactionConfirmation(response);
@@ -145,7 +145,7 @@ public class FakeChargePoint {
                                 return new GetCompositeScheduleConfirmation(GetCompositeScheduleStatus.Accepted);
                             }
                         });
-
+        /*
         remoteTrigger =
                 new ClientRemoteTriggerProfile(
                         new ClientRemoteTriggerEventHandler() {
@@ -155,8 +155,14 @@ public class FakeChargePoint {
                                 receivedRequest = request;
                                 return new TriggerMessageConfirmation(TriggerMessageStatus.Accepted);
                             }
-                        });
-
+                        });*/
+        remoteTrigger =
+                new ClientRemoteTriggerProfile(
+                        request -> {
+                            receivedRequest = request;
+                            return new TriggerMessageConfirmation(TriggerMessageStatus.Accepted);
+                        }
+                );
         firmware =
                 new ClientFirmwareManagementProfile(
                         new ClientFirmwareManagementEventHandler() {
@@ -323,16 +329,19 @@ public class FakeChargePoint {
     }
 
     public void sendStopTransactionRequest(Integer meterStop, long id) {
-        // finished  meter stop ve transıd gönderecegiz
         String value = mockChargingSessionServices.findByCurrMeterValue(id);
-        StopTransactionRequest request = core.createStopTransactionRequest(Integer.parseInt(value), ZonedDateTime.now(), Math.toIntExact(id));
+        mockChargingSessionServices.setMeterStop( id , meterStop);
+        StopTransactionRequest request =
+                core.createStopTransactionRequest(Integer.parseInt(value), ZonedDateTime.now(), Math.toIntExact(id));
         send(request);
     }
 
-    public void sendMeterValuesRequest(Integer connectorId, String meterValue) {
+    public void sendMeterValuesRequest(Integer connectorId, String meterValue, String idTag) {
         MeterValuesRequest request = core.createMeterValuesRequest(connectorId, ZonedDateTime.now(), meterValue);
+        request.setTransactionId(Integer.valueOf(idTag));
         send(request);
     }
+
 
     public void sendDataTransferRequest(String vendorId, String messageId, String data) {
         try {
@@ -346,23 +355,17 @@ public class FakeChargePoint {
         }
     }
 
-    public void sendStatusNotificationRequest() {
-        List<MockChargingSession> mockChargingActiveSessions = mockChargingSessionServices.findByStatus(SessionStatus.ACTIVE);
-        if (!mockChargingActiveSessions.isEmpty()) {
-            for (MockChargingSession session : mockChargingActiveSessions) {
-                final String chargePoint = session.getChargePointOcppId();
-                final Long connectorId = mockConnectorServices.findConnector(Long.valueOf(chargePoint));
-                mockConnectorServices.setStatusCharge(Long.valueOf(chargePoint));
-                try {
-                    StatusNotificationRequest request =
-                            core.createStatusNotificationRequest(Math.toIntExact(connectorId), ChargePointErrorCode.NoError, ChargePointStatus.Charging);
-                    send(request);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+    public void sendStatusNotificationRequest(Long id) {
+        Optional<Connector> mockConnector = mockConnectorServices.findByIdConnector(id);
+        mockConnector.ifPresent(connector -> {
+            try {
+                ChargePointStatus chargePointStatus = ChargePointStatus.valueOf(connector.getStatus().name());
+                StatusNotificationRequest request = core.createStatusNotificationRequest(Math.toIntExact(connector.getId()), ChargePointErrorCode.NoError, chargePointStatus);
+                send(request);
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
-        }
-
+        });
     }
 
     public void sendDiagnosticsStatusNotificationRequest(DiagnosticsStatus status) {

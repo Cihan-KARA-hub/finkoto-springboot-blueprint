@@ -8,13 +8,16 @@ import com.finkoto.chargestation.model.Connector;
 import com.finkoto.chargestation.model.enums.ConnectorStatus;
 import com.finkoto.chargestation.repository.ChargePointRepository;
 import com.finkoto.chargestation.repository.ConnectorRepository;
-import jakarta.transaction.Transactional;
+import eu.chargetime.ocpp.model.core.ChargePointStatus;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -65,6 +68,16 @@ public class ConnectorService {
         return connectorMapper.toDto(newConnector);
     }
 
+    @Transactional
+    public void handleStatusNotificationUpdate(ChargePointStatus status, Integer connectorId) {
+       Optional<Connector> connector = connectorRepository.findById(Long.valueOf(connectorId));
+      connector.ifPresent(connector1 -> {
+          connector1.setStatus(ConnectorStatus.valueOf(status.toString()));
+          connectorRepository.save(connector1);
+      });
+    }
+
+
 //    @Transactional
 //    public boolean statusActivateNewChargingSession(int id) {
 //        Long idx = (long) id;
@@ -77,7 +90,7 @@ public class ConnectorService {
 //            return false;
 //        }
 //    }
-
+/*
     @Transactional
     public boolean statusHandleStopTransactionRequest(int id) {
         Long idx = (long) id;
@@ -92,5 +105,5 @@ public class ConnectorService {
             return false;
         }
     }
-
+*/
 }

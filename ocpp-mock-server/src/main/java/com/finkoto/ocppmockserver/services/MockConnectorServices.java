@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -52,8 +53,8 @@ public class MockConnectorServices {
     }
 
     @Transactional
-    public ConnectorDto findById(Long id) {
-        return connectorMapper.toDto(mockConnectorRepository.findById(id).orElse(null));
+    public Optional<Connector> findByIdConnector(Long id) {
+        return mockConnectorRepository.findById(id);
     }
 
     @Transactional
@@ -103,5 +104,11 @@ public class MockConnectorServices {
             connector.setStatus(ConnectorStatus.Charging);
             mockConnectorRepository.save(connector);
         }
+    }
+
+    public void updateStatus(int id, ConnectorStatus connectorStatus) {
+        Optional<Connector> connector = Optional.ofNullable(mockConnectorRepository.findById((long) id).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id)));
+        connector.get().setStatus(connectorStatus);
+        mockConnectorRepository.save(connector.get());
     }
 }

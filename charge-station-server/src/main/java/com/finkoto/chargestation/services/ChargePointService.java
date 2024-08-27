@@ -63,7 +63,12 @@ public class ChargePointService {
 
     @Transactional
     public ChargePoint findByOcppId(String ocppId) {
-        return chargePointRepository.findByOcppId(ocppId).orElseThrow(() -> new EntityNotFoundException("Entity with ocppId: " + ocppId + " not found."));
+        ChargePoint chargePoint = chargePointRepository.findByOcppId(ocppId);
+        if (chargePoint == null) {
+            throw new EntityNotFoundException("Entity with id: " + ocppId + " not found.");
+        } else {
+            return chargePoint;
+        }
     }
 
     @Transactional

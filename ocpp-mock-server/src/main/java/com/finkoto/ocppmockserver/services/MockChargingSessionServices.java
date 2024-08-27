@@ -43,6 +43,7 @@ public class MockChargingSessionServices {
     @Transactional
     public void activateNewChargingSession(Long id) {
         MockChargingSession mockChargingSession = mockChargingSessionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
+        mockChargingSession.setMeterStart(0);
         mockChargingSession.setStatus(SessionStatus.ACTIVE);
         mockChargingSessionRepository.save(mockChargingSession);
     }
@@ -53,6 +54,7 @@ public class MockChargingSessionServices {
         int random = (int) (Math.random() * 100);
         if (mockChargingSession.getCurrMeter() == null) {
             mockChargingSession.setCurrMeter("0");
+            return "0";
         }
         random = random + Integer.parseInt(mockChargingSession.getCurrMeter());
         mockChargingSession.setCurrMeter(String.valueOf(random));
@@ -87,5 +89,22 @@ public class MockChargingSessionServices {
         final Optional<MockChargingSession> optional = mockChargingSessionRepository.findById(id);
         optional.orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
         return optional.get().getCurrMeter();
+    }
+
+    public Optional<MockChargingSession> findById(Long id) {
+        final Optional<MockChargingSession> optional = mockChargingSessionRepository.findById(id);
+        optional.orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
+        return optional;
+    }
+
+    public Long findByConnectorId(Integer connectorId) {
+        return mockChargingSessionRepository.findByConnectorId(connectorId);
+    }
+
+
+    public void setMeterStop(long id, Integer meterStop) {
+        final Optional<MockChargingSession> optional = Optional.ofNullable(mockChargingSessionRepository.findById(id).orElse(null));
+        optional.get().setMeterStop(meterStop);
+        mockChargingSessionRepository.save(optional.get());
     }
 }

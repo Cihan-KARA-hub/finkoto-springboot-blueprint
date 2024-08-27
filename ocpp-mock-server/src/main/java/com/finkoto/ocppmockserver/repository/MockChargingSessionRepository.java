@@ -13,4 +13,7 @@ public interface MockChargingSessionRepository extends JpaRepository<MockChargin
     Optional<MockChargingSession> findByIdTag(String idTag);
 
     Optional<MockChargingSession> findByChargePointOcppIdAndConnectorIdAndStatus(String chargePointOcppId, int connectorId, SessionStatus status);
+
+    Long findByConnectorId(Integer connectorId);
 }
+

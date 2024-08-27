@@ -2,6 +2,7 @@ package com.finkoto.ocppmockserver.ocpp.client;
 
 import com.finkoto.ocppmockserver.model.ChargePoint;
 import com.finkoto.ocppmockserver.model.MockChargingSession;
+import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
 import com.finkoto.ocppmockserver.model.enums.SessionStatus;
 import com.finkoto.ocppmockserver.server.FakeChargePoint;
 import com.finkoto.ocppmockserver.services.MockChargePointServices;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Component
@@ -64,16 +66,45 @@ public class JsonClientImpl {
     public void startTransactionScheduler() {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.NEW);
         for (MockChargingSession session : sessions) {
-            mockChargingSessionServices.activateNewChargingSession(session.getId());
-            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStartTransactionRequest(session.getConnectorId(), session.getIdTag(), session.getMeterStart()));
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Preparing);
+                //TODO delay atılabilir mi?
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+            }).thenRunAsync(() -> {
+                mockChargingSessionServices.activateNewChargingSession(session.getId());
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStartTransactionRequest(session.getConnectorId(), session.getIdTag(), session.getMeterStart()));
+            }).thenRunAsync(() -> {
+                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Charging);
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+            }).exceptionally(ex -> {
+                log.error("Error in startTransactionScheduler", ex);
+                return null;
+            });
+
         }
     }
+
     @Scheduled(fixedRate = 10000)
     public void stopTransactionScheduler() {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.FINISHING);
         for (MockChargingSession session : sessions) {
-            mockChargingSessionServices.sendStopTransactionRequest(session.getId());
-            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));        }
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Finishing);
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+            }).thenRunAsync(() -> {
+                mockChargingSessionServices.sendStopTransactionRequest(session.getId());
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));
+            }).thenRunAsync(() -> {
+                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Available);
+                getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
+                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+            });
+        }
     }
 
     @Scheduled(fixedRate = 10000)
@@ -81,9 +112,11 @@ public class JsonClientImpl {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.ACTIVE);
         for (MockChargingSession session : sessions) {
             String meterValue = mockChargingSessionServices.updateMeterValue(session.getId());
-            getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint -> fakeChargePoint.sendMeterValuesRequest(session.getConnectorId(), meterValue));
+            getFakeChargePoint(session.getChargePointOcppId())
+                    .ifPresent(fakeChargePoint -> fakeChargePoint.sendMeterValuesRequest(session.getConnectorId(), meterValue, session.getIdTag()));
         }
     }
+
 
     /**
      * TODO  online olmayanları al  ve bir listede tut 5 dakikada bir  baglanmaya çalışsın

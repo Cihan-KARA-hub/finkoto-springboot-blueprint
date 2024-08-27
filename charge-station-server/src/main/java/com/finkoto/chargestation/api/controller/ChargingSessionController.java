@@ -17,12 +17,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/charging-Sessions")
+@RequestMapping("/charging-sessions")
 public class ChargingSessionController {
 
     private final ChargingSessionService chargingSessionService;
     private final OCPPCentralSystem centralSystem;
-
 
     @GetMapping
     public ResponseEntity<PageableResponseDto<ChargingSessionDto>> getAllChargingSessions(@Valid @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
@@ -35,14 +34,19 @@ public class ChargingSessionController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> start(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @RequestParam String idTag) {
-        centralSystem.sendRemoteStartTransactionRequest(ocppId, connectorId, idTag);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<Void> start(@Valid @RequestParam int ocppId, @RequestParam Long connectorId) {
+        Exception check = chargingSessionService.sendRemoteStartTransactionRequest(connectorId,ocppId);
+        if (check != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } else {
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
     }
+    @PutMapping("/stop/{id}")
+    public ResponseEntity<Void> stop(@Valid @PathVariable Long id) {
+        boolean check = chargingSessionService.sendRemoteStopTransactionRequest(id);
+        if (check) return ResponseEntity.ok().build();
+        else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-    @PutMapping("/stop/{idTag}")
-    public ResponseEntity<Void> stop(@Valid @RequestParam String ocppId, @RequestParam int connectorId, @PathVariable String idTag) {
-        chargingSessionService.sendRemoteStopTransactionRequest(ocppId, connectorId, idTag);
-        return ResponseEntity.ok().build();
     }
 }

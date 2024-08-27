@@ -4,9 +4,14 @@ import com.finkoto.chargestation.api.dto.ChargingSessionDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargingSessionMapper;
 import com.finkoto.chargestation.model.ChargingSession;
+import com.finkoto.chargestation.model.Connector;
 import com.finkoto.chargestation.model.enums.SessionStatus;
 import com.finkoto.chargestation.ocpp.OCPPCentralSystem;
 import com.finkoto.chargestation.repository.ChargingSessionRepository;
+import com.finkoto.chargestation.repository.ConnectorRepository;
+import eu.chargetime.ocpp.model.core.AuthorizationStatus;
+import eu.chargetime.ocpp.model.core.IdTagInfo;
+import eu.chargetime.ocpp.model.core.StartTransactionConfirmation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -27,7 +32,7 @@ public class ChargingSessionService {
     private final OCPPCentralSystem centralSystem;
     private final ChargingSessionRepository chargingSessionRepository;
     private final ChargingSessionMapper chargingSessionMapper;
-    private final ConnectorService connectorService;
+    private final ConnectorRepository connectorRepository;
 
     @Transactional
     public PageableResponseDto<ChargingSessionDto> getAll(Pageable pageable) {
@@ -48,28 +53,29 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public List<ChargingSession> findByStatus(SessionStatus status) {
-        return chargingSessionRepository.findByStatus(status);
+    public StartTransactionConfirmation findNewChargingSession(int id) {
+        Optional<Object> session = chargingSessionRepository.findByConnectorId(id);
+        if (session.isPresent()) {
+            ChargingSession cs = (ChargingSession) session.get();
+            activateNewChargingSession(cs.getId(), cs.getMeterStart());
+            final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
+            return new StartTransactionConfirmation(idTagInfo, cs.getConnectorId());
+
+        } else {
+            log.info("No charging session found");
+            return new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Invalid), 0);
+        }
+
     }
 
     @Transactional
-    public Optional<ChargingSession> findNewChargingSession(String ocppId, int connectorOcppId, String idTag, SessionStatus status) {
-        return chargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndIdTagAndStatus(ocppId, connectorOcppId, idTag, status);
-    }
-
-    @Transactional
-    public Optional<ChargingSession> findNewStopChargingSession(String ocppId, int connectorOcppId, String idTag, SessionStatus status) {
-        return chargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndIdTagAndStatus(ocppId, connectorOcppId, idTag, status);
-    }
-
-    @Transactional
-    public void newChargingSession(String ocppId, int connectorId, String idTag) {
+    public ChargingSession newChargingSession(Long connectorId, int ocppId) {
         ChargingSession chargingSession = new ChargingSession();
         chargingSession.setStatus(SessionStatus.NEW);
-        chargingSession.setConnectorId(connectorId);
-        chargingSession.setIdTag(idTag);
-        chargingSession.setChargePointOcppId(ocppId);
+        chargingSession.setConnectorId(Math.toIntExact(connectorId));
+        chargingSession.setChargePointOcppId(String.valueOf(ocppId));
         chargingSessionRepository.save(chargingSession);
+        return chargingSession;
     }
 
     @Transactional
@@ -83,23 +89,22 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public void handleMeterValuesRequest(String meterValue) {
-        chargingSessionRepository.findByStatus(SessionStatus.ACTIVE).forEach(chargingSession -> {
-            if (chargingSession.getCurrMeter() != null) {
-                int meterValues = Integer.parseInt(chargingSession.getCurrMeter()) + Integer.parseInt(meterValue);
-                chargingSession.setCurrMeter(String.valueOf(meterValues));
-                chargingSessionRepository.save(chargingSession);
-            } else {
-                chargingSession.setCurrMeter("0");
-                chargingSessionRepository.save(chargingSession);
-            }
-        });
+    public void handleMeterValuesRequest(int id, String meterValue) {
+        ChargingSession chargingSession = chargingSessionRepository.findById((long) id).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
+        chargingSession.addMeterValue(meterValue);
+        chargingSessionRepository.save(chargingSession);
     }
 
     @Transactional
-    public void sendRemoteStopTransactionRequest(String ocppId, int connectorId, String idTag) {
-        final ChargingSession chargingSession = chargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndIdTag(ocppId, connectorId, idTag).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + idTag + " not found."));
-        centralSystem.sendRemoteStopTransactionRequest(chargingSession.getChargePointOcppId(), chargingSession.getIdTag());
+    public boolean sendRemoteStopTransactionRequest(Long id) {
+        final ChargingSession chargingSession = chargingSessionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
+        if (chargingSession != null && chargingSession.getStatus() == SessionStatus.ACTIVE) {
+            centralSystem.sendRemoteStopTransactionRequest(chargingSession.getChargePointOcppId(), chargingSession.getId());
+            return true;
+        } else {
+            return false;
+        }
+
     }
 
     @Transactional
@@ -113,8 +118,14 @@ public class ChargingSessionService {
         chargingSessionRepository.save(chargingSession);
     }
 
-    public boolean checkActiveSession(String ocppId, int connectorId, SessionStatus status) {
-        Optional<ChargingSession> session = chargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndStatus(ocppId, connectorId, status);
-        return session.isEmpty();
+
+    public Exception sendRemoteStartTransactionRequest(Long connectorId, int ocppId) {
+        Optional<Connector> optionalSession = connectorRepository.findByIdAndOcppId(connectorId, ocppId);
+        if (optionalSession.isPresent()) {
+            centralSystem.sendRemoteStartTransactionRequest(connectorId, ocppId);
+        } else {
+            throw new EntityNotFoundException("Entity with id: " + connectorId + " not found.");
+        }
+        return null;
     }
 }

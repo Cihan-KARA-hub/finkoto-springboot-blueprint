@@ -43,7 +43,7 @@ public class ChargingSession {
     private Integer meterStart = 0;
 
     @Column(name = "curr_meter", length = 50)
-    private String currMeter;
+    private String currMeter="0";
 
     @Column(name = "meter_stop")
     private Integer meterStop;
@@ -104,6 +104,10 @@ public class ChargingSession {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public void addMeterValue(String meterValue){
+        currMeter = String.valueOf(Integer.parseInt(getCurrMeter()) + Integer.parseInt(meterValue));
     }
 }
 

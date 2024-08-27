@@ -10,12 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ChargingSessionRepository extends JpaRepository<ChargingSession, Long> {
-    List<ChargingSession> findByStatus(SessionStatus status);
 
-    Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndIdTagAndStatus(String ocppId, int connector, String idTag, SessionStatus status);
+    Optional<Object> findByConnectorId(int id);
 
-    Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndIdTag(String ocppId, int connector, String idTag);
-    Optional<ChargingSession> findByChargePointOcppIdAndConnectorIdAndStatus(String ocppId, int connector, SessionStatus status);
-
-    Optional<ChargingSession> findByIdTag(String idTag);
 }
