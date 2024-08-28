@@ -25,8 +25,6 @@ public class ChargePointService {
 
     private final ChargePointRepository chargePointRepository;
     private final ChargePointMapper chargePointMapper;
-    private final ChargeHardwareSpecRepository chargeHardwareSpecRepository;
-
 
     @Transactional
     public PageableResponseDto<ChargePointDto> getAll(Pageable pageable) {

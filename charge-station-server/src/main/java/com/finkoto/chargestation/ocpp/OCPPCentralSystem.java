@@ -165,6 +165,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
+        connectorService.statusStartUpdate(request.getConnectorId());
         return chargingSessionService.findNewChargingSession(request.getConnectorId());
     }
 
@@ -182,11 +183,12 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
             new IdTagInfo(AuthorizationStatus.Invalid);
             return new StopTransactionConfirmation();
         }
-        System.out.println(request.getTransactionId());
+        log.info(request.getTransactionId().toString());
         chargingSessionService.handleStopTransactionRequest(request.getTransactionId());
         final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
         StopTransactionConfirmation confirmation = new StopTransactionConfirmation();
         confirmation.setIdTagInfo(idTagInfo);
+        connectorService.statusStopUpdate(optional.get().getConnectorId());
         return confirmation;
     }
 
@@ -257,7 +259,6 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
-    //--------------------- ilk burası
     public void sendRemoteStopTransactionRequest(String ocppId, long id) {
         final RemoteStopTransactionRequest request = new RemoteStopTransactionRequest((int) id);
         request.getTransactionId();

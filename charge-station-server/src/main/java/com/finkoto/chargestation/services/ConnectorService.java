@@ -78,21 +78,18 @@ public class ConnectorService {
     }
 
 
-//    @Transactional
-//    public boolean statusActivateNewChargingSession(int id) {
-//        Long idx = (long) id;
-//        Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
-//        if (connector.getStatus() == ConnectorStatus.Finishing || connector.getStatus() == ConnectorStatus.Available || connector.getStatus() == ConnectorStatus.Preparing) {
-//            connector.setStatus(ConnectorStatus.Charging);
-//            connectorRepository.save(connector);
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
-/*
+   @Transactional
+   public void statusStartUpdate(int id) {
+       Long idx = (long) id;
+       Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
+       if (connector.getStatus() == ConnectorStatus.Finishing || connector.getStatus() == ConnectorStatus.Available || connector.getStatus() == ConnectorStatus.Preparing) {
+           connector.setStatus(ConnectorStatus.Charging);
+           connectorRepository.save(connector);
+       }
+   }
+
     @Transactional
-    public boolean statusHandleStopTransactionRequest(int id) {
+    public boolean statusStopUpdate(int id) {
         Long idx = (long) id;
         Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
         if (connector.getStatus() == ConnectorStatus.Charging) {
@@ -105,5 +102,5 @@ public class ConnectorService {
             return false;
         }
     }
-*/
+
 }

@@ -13,7 +13,6 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-
 import org.keycloak.OAuth2Constants;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
@@ -24,8 +23,8 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @io.swagger.v3.oas.annotations.info.Info(
-                        contact = @Contact(  name = "Blueprint Springboot",
-                                              email = "cihankara632@gmail.com"),
+                contact = @Contact(name = "Blueprint Springboot",
+                        email = "cihankara632@gmail.com"),
                 description = "OpenApi document for spring security",
                 title = "OpenApi specification - Blueprint",
                 version = "1.0",
@@ -75,9 +74,7 @@ public class OpenApiConfig {
                             operation ->
                                     operation.addParametersItem(new HeaderParameter().schema(new StringSchema()._default("tr")).name("Accept-Language"))
                     );
-
             final OAuthFlow password = new OAuthFlow();
-         //   password.authorizationUrl(authorizationUrl);
             password.tokenUrl(tokenUrl);
             password.scopes(new Scopes());
             final OAuthFlows oAuthFlows = new OAuthFlows();

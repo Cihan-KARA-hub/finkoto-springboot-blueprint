@@ -1,8 +1,8 @@
-package com.finkoto.ocppmockserver.api.controller;
+package com.finkoto.chargestation.api.controller;
 
-import com.finkoto.ocppmockserver.api.dto.ConnectorDto;
-import com.finkoto.ocppmockserver.api.dto.PageableResponseDto;
-import com.finkoto.ocppmockserver.services.MockConnectorServices;
+import com.finkoto.chargestation.api.dto.ChargeHardwareSpecDto;
+import com.finkoto.chargestation.model.ChargeHardwareSpec;
+import com.finkoto.chargestation.services.ChargeHardwareSpecService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
@@ -14,25 +14,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
-@Tag(name = "Mock Charging - Charge Points Connector Controller", description = "Charge Point Connector API")
-@RequestMapping("/csm/v1/mock-charge-connector")
-public class MockConnectorController {
+@Tag(name = "Central  Charging - Charge Points Hardware Controller", description = "Charge Point HardWare API")
+@RequestMapping("/csm/v1/charge-HardwareSpec-connector")
+public class ChargeHardwareSpecController {
+    private final ChargeHardwareSpecService chargeHardwareSpecService;
 
-    private final MockConnectorServices connectorService;
-
-    @Operation(summary = "Tüm şarj istasyonların connector  bilgileri  geri döndürülür")
+    @Operation(summary = "Tüm şarj istasyonların donanım bilgileri  geri döndürülür")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -51,6 +48,7 @@ public class MockConnectorController {
                                     name = "X-Request-ID",
                                     description = "Request identifier",
                                     schema = @Schema(type = "string")
+
                             )
                     }
             ),
@@ -99,15 +97,11 @@ public class MockConnectorController {
             )
     })
     @GetMapping
-    public ResponseEntity<PageableResponseDto<ConnectorDto>> getAllConnector(
-            @RequestParam(required = false) Long chargePointId,
-            @PageableDefault(sort = {"created"}, direction = Sort.Direction.DESC)
-            @ParameterObject Pageable pageable
-    ) {
-        return ResponseEntity.ok(connectorService.getAll(pageable, chargePointId));
+    public List<ChargeHardwareSpec> getChargePoints() {
+        return chargeHardwareSpecService.getChargeHardwareSpecList();
     }
 
-    @Operation(summary = "Yeni bir connector oluştur.")
+    @Operation(summary = "Yeni bir şarj istasyonu markası oluştur.")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
@@ -125,7 +119,19 @@ public class MockConnectorController {
                             @Header(
                                     name = "Location",
                                     description = "URL of the newly created resource",
-                                    schema = @Schema(type = "string")
+                                    schema = @Schema(type = "string"),
+                                    examples = @ExampleObject(
+                                            name = "Example Request in body",
+                                            value = "{\n" +
+                                                    "  \"chargePointVendor\": \"\",\n" +
+                                                    "  \"chargePointModel\": \"\",\n" +
+                                                    "  \"firmwareVersion\": \"\",\n" +
+                                                    "  \"chargePointSerialNumber\": \"\",\n" +
+                                                    "  \"meterType\": \"\",\n" +
+                                                    "  \"meterSerialNumber\": \"\",\n" +
+                                                    "  \"chargeBoxSerialNumber\": \"\"\n" +
+                                                    "}"
+                                    )
                             )
                     }
             ),
@@ -247,12 +253,84 @@ public class MockConnectorController {
             )
     })
     @PostMapping
-    public ResponseEntity<ConnectorDto> createConnector(@RequestBody ConnectorDto connectorDto) {
-        connectorService.create(connectorDto);
+    public ResponseEntity<Void> createChargePoint(@RequestBody ChargeHardwareSpecDto chargeHardwareSpecDto) {
+        chargeHardwareSpecService.create(chargeHardwareSpecDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @Operation(summary = "verilen id'ye göre şarj istasyonlarının  connector bilgilerini günceller.")
+    @Operation(summary = "Verilen Id'nin şarj istasyonunun donanım bilgileri  geri döndürülür")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successful Operation",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(),
+                            examples = @ExampleObject(
+                                    name = "SuccessExample",
+                                    summary = "An example of a successful response",
+                                    value = "{\"message\": \"Operation completed successfully\"}"
+                            )
+                    ),
+                    headers = {
+                            @Header(
+                                    name = "X-Request-ID",
+                                    description = "Request identifier",
+                                    schema = @Schema(type = "string")
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "ServerErrorExample",
+                                    summary = "An example of a 500 response",
+                                    value = "{\"message\": \"Internal server error\", \"errorCode\": 500}"
+                            )
+                    ),
+                    headers = {
+                            @Header(
+                                    name = "Retry-After",
+                                    description = "Time in seconds before the client can retry",
+                                    schema = @Schema(type = "integer", format = "int32")
+                            )
+                    },
+                    extensions = {
+                            @Extension(name = "x-error-details", properties = {
+                                    @ExtensionProperty(name = "support", value = "Contact support with error details")
+                            })
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "UnauthorizedExample",
+                                    summary = "An example of a 401 response",
+                                    value = "{\"message\": \"Unauthorized access\", \"errorCode\": 401}"
+                            )
+                    ),
+                    extensions = {
+                            @Extension(name = "x-unauthorized-info", properties = {
+                                    @ExtensionProperty(name = "reason", value = "User needs to authenticate")
+                            })
+                    }
+            )
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ChargeHardwareSpecDto> getChargePointById(@PathVariable("id") Long id) {
+        return Optional.ofNullable(chargeHardwareSpecService.getChargeHardwareSpec(id)).map(ResponseEntity::ok).
+                orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Operation(summary = "şarj istasyonlarının  donanım bilgilerini günceller.")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
@@ -270,7 +348,19 @@ public class MockConnectorController {
                             @Header(
                                     name = "Location",
                                     description = "URL of the newly created resource",
-                                    schema = @Schema(type = "string")
+                                    schema = @Schema(type = "string"),
+                                    examples = @ExampleObject(
+                                            description = "you can choose any of the given value",
+                                            value = "{\n" +
+                                                    "  \"chargePointVendor\": \"\",\n" +
+                                                    "  \"chargePointModel\": \"\",\n" +
+                                                    "  \"firmwareVersion\": \"\",\n" +
+                                                    "  \"chargePointSerialNumber\": \"\",\n" +
+                                                    "  \"meterType\": \"\",\n" +
+                                                    "  \"meterSerialNumber\": \"\",\n" +
+                                                    "  \"chargeBoxSerialNumber\": \"\"\n" +
+                                                    "}"
+                                    )
                             )
                     }
             ),
@@ -392,12 +482,12 @@ public class MockConnectorController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ConnectorDto> updateConnector(@RequestBody ConnectorDto connectorDto, @PathVariable Long id) {
-        return ResponseEntity.ok(connectorService.update(connectorDto, id));
+    public ResponseEntity<Void> updateChargePoint(@PathVariable("id") Long id, @RequestBody ChargeHardwareSpecDto chargeHardwareSpecDto) {
+        chargeHardwareSpecService.update(id, chargeHardwareSpecDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @Operation(summary = "verilen id' ye göre  connector silinir.")
-    // 200 OK - Başarılı Silme Yanıtı
+    @Operation(summary ="şarj istasyonunun donanım markasını siler")
     @ApiResponse(
             responseCode = "200",
             description = "Successfully deleted the resource",
@@ -412,14 +502,12 @@ public class MockConnectorController {
             )
     )
 
-// 204 No Content - Başarıyla Silindi, Gönderilecek İçerik Yok
     @ApiResponse(
             responseCode = "204",
             description = "Successfully deleted, no content",
             content = @Content
     )
 
-// 404 Not Found - Kaynak Bulunamadı
     @ApiResponse(
             responseCode = "404",
             description = "Resource not found",
@@ -434,7 +522,6 @@ public class MockConnectorController {
             )
     )
 
-// 401 Unauthorized - Yetkilendirme Hatası
     @ApiResponse(
             responseCode = "401",
             description = "Unauthorized access",
@@ -449,7 +536,6 @@ public class MockConnectorController {
             )
     )
 
-// 500 Internal Server Error - Sunucu Hatası
     @ApiResponse(
             responseCode = "500",
             description = "Internal Server Error",
@@ -469,10 +555,8 @@ public class MockConnectorController {
             }
     )
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteConnector(@PathVariable Long id) {
-        connectorService.delete(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<Void> deleteChargePoint(@PathVariable("id") Long id) {
+        chargeHardwareSpecService.delete(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
-
-
 }

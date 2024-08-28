@@ -1,4 +1,4 @@
-package com.finkoto.chargestation.config;
+package com.finkoto.ocppmockserver.api.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @io.swagger.v3.oas.annotations.info.Info(
-                contact = @Contact(name = "Finkoto Fake Charge Central Simulation",
+                contact = @Contact(name = "Finkoto Fake Charge Point Simulation",
                         email = "cihankara632@gmail.com"),
                 description = "Finkoto Fake Charge Point Simulation",
                 title = "Charge Central Restful API",
@@ -28,22 +28,22 @@ import org.springframework.context.annotation.Configuration;
         )}
 )
 @Configuration
-public class OpenApiConfig {
+public class MockOpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Central System")
+                        .title("Mock Charge System")
                         .version("1.0")
-                        .description("Central System REST API"));
+                        .description("Mock Charge System REST API"));
     }
 
     @Bean
     public GroupedOpenApi version1() {
         return GroupedOpenApi.builder()
-                .group("Charge Point Rest API v1.0")
-                .pathsToMatch("/csm/v1/charging-sessions/**","/csm/v1/charge-points/**","/csm/v1/connectors/**","/csm/v1/charge-HardwareSpec-connector")
+                .group("Mock Charge Point Rest API v1.0")
+                .pathsToMatch("/csm/v1/mock-charge-points/**","/csm/v1/mock-charge-connector/**","/csm/v1/mock-HardwareSpec-connector")
                 .addOpenApiCustomizer(setDocumentation("1.0"))
                 .build();
     }
@@ -51,8 +51,8 @@ public class OpenApiConfig {
     private OpenApiCustomizer setDocumentation(String version) {
         return openApi -> {
             openApi.info(new Info()
-                            .title("REST API endpoints for Charge Point Server")
-                            .description("Use the REST API to interact with Charge Point Server.")
+                            .title("REST API endpoints for Mock Charge Point Server")
+                            .description("Use the REST API to interact with Mock Charge Point Server.")
                             .version(version))
                     .getPaths().values().stream()
                     .flatMap(pathItem -> pathItem.readOperations().stream())

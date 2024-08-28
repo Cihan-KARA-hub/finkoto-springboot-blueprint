@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -40,6 +41,7 @@ public class CustomResponseEntityExceptionHandler {
 
 
     @ExceptionHandler(NoContentException.class)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public final ResponseEntity<Object> handleNoContentException(NoContentException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "No content available.");
@@ -48,6 +50,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public final ResponseEntity<Object> handleBadRequestException(BadRequestException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Bad request.");
@@ -56,6 +59,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public final ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Authentication failed.");
@@ -64,6 +68,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public final ResponseEntity<Object> handleForbiddenException(ForbiddenException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Access is forbidden.");
@@ -72,6 +77,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ChangeSetPersister.NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public final ResponseEntity<Object> handleNotFoundException(ChangeSetPersister.NotFoundException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The requested resource was not found.");
@@ -80,6 +86,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public final ResponseEntity<Object> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The HTTP method is not allowed for this resource.");
@@ -88,13 +95,16 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(HttpClientErrorException.NotAcceptable.class)
+    @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
     public final ResponseEntity<Object> handleNotAcceptable(HttpClientErrorException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The requested resource is not acceptable.");
         errors.put("details", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.NOT_ACCEPTABLE);
     }
+
     @ExceptionHandler(HttpClientErrorException.Conflict.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public final ResponseEntity<Object> handleConflictException(HttpClientErrorException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The requested resource was not found.");
@@ -103,6 +113,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public final ResponseEntity<Object> handleAllExceptions(Exception ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "An unexpected error occurred.");
@@ -111,6 +122,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public final ResponseEntity<Object> handleServiceUnavailableException(ServiceUnavailableException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The service is currently unavailable.");
@@ -119,6 +131,7 @@ public class CustomResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(HttpServerErrorException.GatewayTimeout.class)
+    @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
     public final ResponseEntity<Object> handleGatewayTimeout(HttpServerErrorException.GatewayTimeout ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "The gateway timed out while processing the request.");

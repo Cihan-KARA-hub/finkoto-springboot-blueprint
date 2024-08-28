@@ -1,14 +1,11 @@
-package com.finkoto.chargestation.api.mapper;
+package com.finkoto.ocppmockserver.api.mapper;
 
 
-import com.finkoto.chargestation.api.dto.ChargeHardwareSpecDto;
-import com.finkoto.chargestation.model.ChargeHardwareSpec;
+import com.finkoto.ocppmockserver.api.dto.ChargeHardwareSpecDto;
+import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
-
-
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public abstract class ChargeHardwareSpecMapper {
