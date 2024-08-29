@@ -5,6 +5,7 @@ import com.finkoto.chargestation.model.ChargingSession;
 import com.finkoto.chargestation.services.ChargePointService;
 import com.finkoto.chargestation.services.ChargingSessionService;
 import com.finkoto.chargestation.services.ConnectorService;
+import com.finkoto.chargestation.services.OcppLoggerService;
 import eu.chargetime.ocpp.JSONServer;
 import eu.chargetime.ocpp.ServerEvents;
 import eu.chargetime.ocpp.feature.profile.ServerCoreEventHandler;
@@ -45,6 +46,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     private ChargingSessionService chargingSessionService;
     private ChargePointService chargePointService;
     private ConnectorService connectorService;
+    private OcppLoggerService ocppLoggerService;
     private JSONServer server;
 
     @Value("${websocket.port}")
@@ -53,6 +55,11 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     @Value("${websocket.host}")
     private String webSocketHost;
 
+    @Lazy
+    @Autowired
+    public void setOcppLoggerService(OcppLoggerService ocppLoggerService) {
+        this.ocppLoggerService = ocppLoggerService;
+    }
     @Lazy
     @Autowired
     public void setConnectorService(ConnectorService connectorService) {
@@ -134,7 +141,6 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                 request.getFirmwareVersion(),
                 request.getMeterSerialNumber(),
                 request.getChargePointVendor());
-
         return new BootNotificationConfirmation(ZonedDateTime.now(), 0, RegistrationStatus.Accepted);
 
     }
@@ -148,27 +154,34 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
     @Override
     public HeartbeatConfirmation handleHeartbeatRequest(UUID sessionIndex, HeartbeatRequest request) {
         log.info(String.valueOf(request));
+
         chargePointService.handleHeartbeatRequest(getOcppId(sessionIndex));
         return new HeartbeatConfirmation(ZonedDateTime.now());
     }
 
+    //log kaydedildi
     @Override
     public MeterValuesConfirmation handleMeterValuesRequest(UUID sessionIndex, MeterValuesRequest request) {
         Arrays.stream(request.getMeterValue()).findFirst().flatMap(meterValue -> Arrays.stream(meterValue.getSampledValue()).findFirst()).ifPresent(sampledValue -> {
             String value = sampledValue.getValue();
             int id = request.getTransactionId();
+
             chargingSessionService.handleMeterValuesRequest(id, value);
         });
+        ocppLoggerService.meterValueLog(request);
         return new MeterValuesConfirmation();
     }
 
+    //log kaydedildi
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
         connectorService.statusStartUpdate(request.getConnectorId());
+        ocppLoggerService.startSave(request);
         return chargingSessionService.findNewChargingSession(request.getConnectorId());
     }
 
+    //log kaydedildi
     @Override
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
         log.info(String.valueOf(request));
@@ -176,6 +189,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         return new StatusNotificationConfirmation();
     }
 
+    //log kaydedildi
     @Override
     public StopTransactionConfirmation handleStopTransactionRequest(UUID sessionIndex, StopTransactionRequest request) {
         final Optional<ChargingSession> optional = chargingSessionService.findById(request.getTransactionId());
@@ -189,6 +203,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         StopTransactionConfirmation confirmation = new StopTransactionConfirmation();
         confirmation.setIdTagInfo(idTagInfo);
         connectorService.statusStopUpdate(optional.get().getConnectorId());
+        ocppLoggerService.stopSave(request);
         return confirmation;
     }
 
@@ -225,6 +240,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
+    //log kaydedildi
     public void sendRemoteStartTransactionRequest(Long connectorId, int ocppId) {
 
         ChargingSession chargingSession = chargingSessionService.newChargingSession(connectorId, ocppId);
@@ -237,6 +253,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                 log.info("Remote start transaction successful for charge point: {}", ocppId);
             }
         });
+
     }
 
 
@@ -267,6 +284,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
                 log.error("Remote stop transaction failed for charge point: {}", ocppId, throwable);
             } else {
                 log.info("Remote stop transaction successful for charge point: {}", ocppId);
+
             }
         });
     }

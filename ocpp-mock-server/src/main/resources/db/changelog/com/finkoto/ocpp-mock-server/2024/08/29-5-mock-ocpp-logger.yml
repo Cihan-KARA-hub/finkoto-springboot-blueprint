@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 9
+      author: cihan
+      changes:
+        - createTable:
+            tableName: mock_ocpp_logger
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charge_point_ocpp_id
+                  type: varchar(20)
+              - column:
+                  name: connector_ocpp_id
+                  type: varchar(20)
+              - column:
+                  name: charging_session_id
+                  type: varchar(20)
+              - column:
+                  name: info
+                  type: varchar(50)

@@ -8,11 +8,11 @@ import com.finkoto.ocppmockserver.model.Connector;
 import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
 import com.finkoto.ocppmockserver.repository.MockChargePointRepository;
 import com.finkoto.ocppmockserver.repository.MockConnectorRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -110,5 +110,12 @@ public class MockConnectorServices {
         Optional<Connector> connector = Optional.ofNullable(mockConnectorRepository.findById((long) id).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id)));
         connector.get().setStatus(connectorStatus);
         mockConnectorRepository.save(connector.get());
+    }
+
+    @Transactional
+    public String getChargePointId(Integer connectorId) {
+        Optional<Connector> idx = mockConnectorRepository.findById(Long.valueOf(connectorId));
+        ChargePoint connector = idx.get().getChargePoint();
+        return connector.getId().toString();
     }
 }
