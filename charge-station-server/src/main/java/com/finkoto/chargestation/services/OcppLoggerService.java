@@ -38,33 +38,28 @@ public class OcppLoggerService {
     }
 
     @Transactional
-    public void startSave(StartTransactionRequest request) {
+    public void handleStartTransactionRequestLogger(StartTransactionRequest request) {
         OcppLogger logger = new OcppLogger();
         Integer connectorId = request.getConnectorId();
         String byChargePointId = connectorService.getChargePointId(connectorId);
         logger.setChargePointOcppId(byChargePointId);
         logger.setConnectorOcppId(request.getConnectorId().toString());
         logger.setChargingSessionId(request.getIdTag());
-        logger.setInfo("Start " + logger.getChargePointOcppId());
+        logger.setInfo("Start (handle start transaction request) " + logger.getChargePointOcppId());
         ocppLoggerRepository.save(logger);
     }
 
     @Transactional
-    public void stopSave(StopTransactionRequest request) {
+    public void sendRemoteStartTransactionRequestLogger(Long sessionId) {
         OcppLogger logger = new OcppLogger();
-        Optional<ChargingSession> optional = chargingSessionService.findById(request.getTransactionId());
-        logger.setChargePointOcppId(optional.get().getChargePointOcppId());
+        Optional<ChargingSession> optional = chargingSessionService.findById(sessionId);
+        logger.setChargingSessionId(sessionId.toString());
         logger.setConnectorOcppId(String.valueOf(optional.get().getConnectorId()));
-        logger.setChargingSessionId(optional.get().getId().toString());
-        logger.setInfo("Stop " + logger.getChargePointOcppId());
-        ocppLoggerRepository.save(logger);
+        logger.setChargePointOcppId(String.valueOf(optional.get().getChargePointOcppId()));
+        logger.setInfo("Send Start (send remote start transaction request) " + logger.getChargePointOcppId());
     }
 
     @Transactional
-    public void delete(long id) {
-        ocppLoggerRepository.deleteById(id);
-    }
-
     public void meterValueLog(MeterValuesRequest request) {
         OcppLogger logger = new OcppLogger();
         Optional<ChargingSession> optional = chargingSessionService.findById(request.getTransactionId());
@@ -73,5 +68,27 @@ public class OcppLoggerService {
         logger.setChargingSessionId(request.getTransactionId().toString());
         logger.setInfo("Hear Beat Meter Value " + Arrays.toString(request.getMeterValue()) + "-> " + logger.getConnectorOcppId());
         ocppLoggerRepository.save(logger);
+    }
+
+    @Transactional
+    public void handleStopTransactionRequestLogger(StopTransactionRequest request) {
+        OcppLogger logger = new OcppLogger();
+        Optional<ChargingSession> optional = chargingSessionService.findById(request.getTransactionId());
+        logger.setChargePointOcppId(optional.get().getChargePointOcppId());
+        logger.setConnectorOcppId(String.valueOf(optional.get().getConnectorId()));
+        logger.setChargingSessionId(optional.get().getId().toString());
+        logger.setInfo("Stop  (handle stop transaction request)" + logger.getChargePointOcppId());
+        ocppLoggerRepository.save(logger);
+    }
+
+    @Transactional
+    public void sendRemoteStopTransactionRequestLogger(long id) {
+        OcppLogger logger = new OcppLogger();
+        Optional<ChargingSession> cpId = chargingSessionService.findById(id);
+        logger.setChargingSessionId(cpId.get().getId().toString());
+        logger.setConnectorOcppId(String.valueOf(cpId.get().getConnectorId()));
+        logger.setChargePointOcppId(cpId.get().getChargePointOcppId());
+        logger.setInfo("Send remote stop transaction {}" + id);
+
     }
 }

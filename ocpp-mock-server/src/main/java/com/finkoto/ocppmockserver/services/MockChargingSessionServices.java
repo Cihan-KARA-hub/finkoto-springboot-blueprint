@@ -98,7 +98,7 @@ public class MockChargingSessionServices {
         return optional;
     }
 
-    public Long findByConnectorId(Integer connectorId) {
+    public List<MockChargingSession> findByConnectorId(Integer connectorId) {
         return mockChargingSessionRepository.findByConnectorId(connectorId);
     }
 

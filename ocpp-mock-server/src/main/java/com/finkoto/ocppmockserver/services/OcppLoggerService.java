@@ -2,19 +2,17 @@ package com.finkoto.ocppmockserver.services;
 
 import com.finkoto.ocppmockserver.model.MockChargingSession;
 import com.finkoto.ocppmockserver.model.OcppLogger;
-import com.finkoto.ocppmockserver.repository.MockConnectorRepository;
+import com.finkoto.ocppmockserver.model.enums.SessionStatus;
 import com.finkoto.ocppmockserver.repository.MockOcppLoggerRepository;
 import com.finkoto.ocppmockserver.services.specification.OcppLoggerSpecification;
-import eu.chargetime.ocpp.model.core.MeterValuesRequest;
-import eu.chargetime.ocpp.model.core.StartTransactionRequest;
-import eu.chargetime.ocpp.model.core.StopTransactionRequest;
+import eu.chargetime.ocpp.model.core.RemoteStartTransactionRequest;
+import eu.chargetime.ocpp.model.core.RemoteStopTransactionRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,10 +21,8 @@ import java.util.Optional;
 @Service
 public class OcppLoggerService {
     private final MockOcppLoggerRepository ocppLoggerRepository;
-
-    private final MockConnectorRepository connectorRepository;
     private final MockConnectorServices connectorService;
-    private final MockChargingSessionServices chargingSessionService;
+    private final MockChargingSessionServices mockChargingSessionServices;
 
 
     @Transactional
@@ -38,41 +34,62 @@ public class OcppLoggerService {
     }
 
     @Transactional
-    public void startSave(StartTransactionRequest request) {
+    public void handleRemoteStartTransactionRequestLogger(RemoteStartTransactionRequest request) {
         OcppLogger logger = new OcppLogger();
-        Integer connectorId = request.getConnectorId();
-        String byChargePointId = connectorService.getChargePointId(connectorId);
-        logger.setChargePointOcppId(byChargePointId);
-        logger.setConnectorOcppId(request.getConnectorId().toString());
-        logger.setChargingSessionId(request.getIdTag());
-        logger.setInfo("Start " + logger.getChargePointOcppId());
+        String cpId = connectorService.getChargePointId(request.getConnectorId());
+        List<MockChargingSession> sessionId = mockChargingSessionServices.findByConnectorId(request.getConnectorId());
+        for (MockChargingSession session : sessionId) {
+            if (session.getStatus() == SessionStatus.NEW) {
+                logger.setConnectorOcppId(request.getConnectorId().toString());
+                logger.setChargingSessionId(session.getId().toString());
+                logger.setChargePointOcppId(cpId);
+                logger.setInfo("Start new charge sessions (handle remote start transaction) {}" + request.getConnectorId());
+                ocppLoggerRepository.save(logger);
+            }
+        }
+
+    }
+
+    @Transactional
+    public void sendStartTransactionRequestLogger(int connectorId, String idTag) {
+        OcppLogger logger = new OcppLogger();
+        String cpId = connectorService.getChargePointId(connectorId);
+        logger.setChargePointOcppId(cpId);
+        logger.setConnectorOcppId(String.valueOf(connectorId));
+        logger.setChargingSessionId(idTag);
+        logger.setInfo("Start new charge sessions (send start transaction) {}" + idTag);
+    }
+
+    @Transactional
+    public void meterValueLog(int connectorId, String idTag, String meterValue) {
+        OcppLogger logger = new OcppLogger();
+        String cpId = connectorService.getChargePointId(connectorId);
+        logger.setChargePointOcppId(cpId);
+        logger.setConnectorOcppId(String.valueOf(connectorId));
+        logger.setChargingSessionId(idTag);
+        logger.setInfo("Start new meter values (meter) {}" + meterValue);
         ocppLoggerRepository.save(logger);
     }
 
     @Transactional
-    public void stopSave(StopTransactionRequest request) {
+    public void handleRemoteStopTransactionRequestLogger(RemoteStopTransactionRequest request) {
         OcppLogger logger = new OcppLogger();
-        Optional<MockChargingSession> optional = chargingSessionService.findById(Long.valueOf(request.getTransactionId()));
-        logger.setChargePointOcppId(optional.get().getChargePointOcppId());
-        logger.setConnectorOcppId(String.valueOf(optional.get().getConnectorId()));
-        logger.setChargingSessionId(optional.get().getId().toString());
-        logger.setInfo("Stop " + logger.getChargePointOcppId());
-        ocppLoggerRepository.save(logger);
+        Optional<MockChargingSession> sessionId = mockChargingSessionServices.findById(Long.valueOf(request.getTransactionId()));
+        logger.setChargingSessionId(sessionId.get().getId().toString());
+        logger.setConnectorOcppId(String.valueOf(sessionId.get().getConnectorId()));
+        logger.setChargePointOcppId(sessionId.get().getChargePointOcppId());
+        logger.setInfo("handle remote stop transaction {}" + request.getTransactionId().toString());
     }
 
     @Transactional
-    public void delete(long id) {
-        ocppLoggerRepository.deleteById(id);
-    }
-
-    public void meterValueLog(MeterValuesRequest request) {
+    public void sendStopTransactionRequestLogger(long id) {
         OcppLogger logger = new OcppLogger();
-        Optional<MockChargingSession> optional = chargingSessionService.findById(Long.valueOf(request.getTransactionId()));
-        logger.setChargePointOcppId(optional.get().getChargePointOcppId());
-        logger.setConnectorOcppId(request.getConnectorId().toString());
-        logger.setChargingSessionId(request.getTransactionId().toString());
-        logger.setInfo("Hear Beat Meter Value " + Arrays.toString(request.getMeterValue()) + "-> " + logger.getConnectorOcppId());
-        ocppLoggerRepository.save(logger);
+        Optional<MockChargingSession> cpId = mockChargingSessionServices.findById(id);
+        logger.setChargingSessionId(cpId.get().getId().toString());
+        logger.setConnectorOcppId(String.valueOf(cpId.get().getConnectorId()));
+        logger.setChargePointOcppId(cpId.get().getChargePointOcppId());
+        logger.setInfo("Send remote stop transaction {}" + id);
+
     }
 
 

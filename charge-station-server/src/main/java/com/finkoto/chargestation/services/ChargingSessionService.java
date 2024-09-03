@@ -5,6 +5,7 @@ import com.finkoto.chargestation.api.dto.PageableResponseDto;
 import com.finkoto.chargestation.api.mapper.ChargingSessionMapper;
 import com.finkoto.chargestation.model.ChargingSession;
 import com.finkoto.chargestation.model.Connector;
+import com.finkoto.chargestation.model.enums.ConnectorStatus;
 import com.finkoto.chargestation.model.enums.SessionStatus;
 import com.finkoto.chargestation.ocpp.OCPPCentralSystem;
 import com.finkoto.chargestation.repository.ChargingSessionRepository;
@@ -42,29 +43,28 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public ChargingSessionDto findById(Long id) {
+    public ChargingSessionDto findByIdDto(Long id) {
         ChargingSession chargingSession = chargingSessionRepository.findById(id).orElse(null);
         return chargingSessionMapper.toDto(chargingSession);
     }
 
     @Transactional
     public Optional<ChargingSession> findById(long id) {
-        return chargingSessionRepository.findById(id);
+        return Optional.ofNullable(chargingSessionRepository.findById(id).orElse(null));
     }
 
     @Transactional
-    public StartTransactionConfirmation findNewChargingSession(int id) {
-        Optional<Object> session = chargingSessionRepository.findByConnectorId(id);
-        if (session.isPresent()) {
-            ChargingSession cs = (ChargingSession) session.get();
-            activateNewChargingSession(cs.getId(), cs.getMeterStart());
+    public StartTransactionConfirmation findNewChargingSession(int connectorId, String idTag) {
+        Optional<ChargingSession> sessionOptional = chargingSessionRepository.findById(Long.valueOf(idTag));
+        if (sessionOptional.isPresent() && sessionOptional.get().getStatus() == SessionStatus.NEW) {
+            activateNewChargingSession(sessionOptional.get().getId(), idTag);
             final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
-            return new StartTransactionConfirmation(idTagInfo, cs.getConnectorId());
-
+            return new StartTransactionConfirmation(idTagInfo, connectorId);
         } else {
             log.info("No charging session found");
             return new StartTransactionConfirmation(new IdTagInfo(AuthorizationStatus.Invalid), 0);
         }
+
 
     }
 
@@ -79,12 +79,13 @@ public class ChargingSessionService {
     }
 
     @Transactional
-    public void activateNewChargingSession(Long id, Integer meterStart) {
+    public void activateNewChargingSession(Long id, String idTag) {
         final ChargingSession chargingSession = chargingSessionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity with id: " + id + " not found."));
         chargingSession.setBeginTime(OffsetDateTime.now());
         chargingSession.setStatus(SessionStatus.ACTIVE);
-        chargingSession.setMeterStart(meterStart);
-        chargingSession.setCurrMeter(String.valueOf(meterStart));
+        chargingSession.setIdTag(idTag);
+        chargingSession.setMeterStart(0);
+        chargingSession.setCurrMeter("0");
         chargingSessionRepository.save(chargingSession);
     }
 
@@ -114,14 +115,16 @@ public class ChargingSessionService {
             return;
         }
         final ChargingSession chargingSession = optional.get();
+        chargingSession.setMeterStop(Integer.valueOf(chargingSession.getCurrMeter()));
+        chargingSession.setEndTime(OffsetDateTime.now());
         chargingSession.setStatus(SessionStatus.FINISHED);
         chargingSessionRepository.save(chargingSession);
     }
 
-
+    @Transactional
     public Exception sendRemoteStartTransactionRequest(Long connectorId, int ocppId) {
-        Optional<Connector> optionalSession = connectorRepository.findByIdAndOcppId(connectorId, ocppId);
-        if (optionalSession.isPresent()) {
+        Optional<Connector> connector = connectorRepository.findByIdAndOcppId(connectorId, ocppId);
+        if (connector.isPresent() && connector.get().getStatus() == ConnectorStatus.Available) {
             centralSystem.sendRemoteStartTransactionRequest(connectorId, ocppId);
         } else {
             throw new EntityNotFoundException("Entity with id: " + connectorId + " not found.");

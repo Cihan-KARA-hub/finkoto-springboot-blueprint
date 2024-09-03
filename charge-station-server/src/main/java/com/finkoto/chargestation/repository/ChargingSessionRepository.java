@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface ChargingSessionRepository extends JpaRepository<ChargingSession, Long> {
 
-    Optional<Object> findByConnectorId(int id);
+    List<ChargingSession> findByConnectorId(int connectorId );
+    Optional<ChargingSession> findByIdTag(String tag);
 
 }

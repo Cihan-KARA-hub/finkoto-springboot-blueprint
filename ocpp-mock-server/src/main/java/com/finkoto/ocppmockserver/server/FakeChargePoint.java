@@ -5,6 +5,7 @@ import com.finkoto.ocppmockserver.model.Connector;
 import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
 import com.finkoto.ocppmockserver.services.MockConnectorServices;
+import com.finkoto.ocppmockserver.services.OcppLoggerService;
 import eu.chargetime.ocpp.CallErrorException;
 import eu.chargetime.ocpp.ClientEvents;
 import eu.chargetime.ocpp.IClientAPI;
@@ -40,13 +41,15 @@ public class FakeChargePoint {
     private final ClientSecurityExtProfile securityExt;
     private final MockChargingSessionServices mockChargingSessionServices;
     private final MockConnectorServices mockConnectorServices;
+    private final OcppLoggerService ocppLoggerService;
     IClientAPI client;
     Confirmation receivedConfirmation;
     Request receivedRequest;
     Throwable receivedException;
 
-    public FakeChargePoint(String chargePointOcppId, MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices) {
+    public FakeChargePoint(String chargePointOcppId, MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, OcppLoggerService ocppLoggerService) {
         this.mockChargingSessionServices = mockChargingSessionServices;
+        this.ocppLoggerService = ocppLoggerService;
         this.mockConnectorServices = mockConnectorServices;
         this.chargePointOcppId = chargePointOcppId;
         core =
@@ -94,9 +97,9 @@ public class FakeChargePoint {
 
                             @Override
                             public RemoteStartTransactionConfirmation handleRemoteStartTransactionRequest(RemoteStartTransactionRequest request) {
-                                log.info(request.toString());
                                 receivedRequest = request;
                                 RemoteStartStopStatus response = mockChargingSessionServices.handleRemoteStartTransactionRequest(chargePointOcppId, request.getConnectorId(), request.getIdTag());
+                                ocppLoggerService.handleRemoteStartTransactionRequestLogger(request);
                                 return new RemoteStartTransactionConfirmation(response);
                             }
 
@@ -104,6 +107,7 @@ public class FakeChargePoint {
                             public RemoteStopTransactionConfirmation handleRemoteStopTransactionRequest(RemoteStopTransactionRequest request) {
                                 receivedRequest = request;
                                 RemoteStartStopStatus response = mockChargingSessionServices.remoteStopTransactionRequest(request.getTransactionId());
+                                ocppLoggerService.handleRemoteStopTransactionRequestLogger(request);
                                 return new RemoteStopTransactionConfirmation(response);
                             }
 
@@ -326,20 +330,26 @@ public class FakeChargePoint {
     public void sendStartTransactionRequest(Integer connectorId, String idTag, Integer meterStart) {
         Request request = core.createStartTransactionRequest(connectorId, idTag, meterStart, ZonedDateTime.now());
         send(request);
+        if (connectorId != null && idTag != null) {
+            ocppLoggerService.sendStartTransactionRequestLogger(connectorId, idTag);
+        }
+
     }
 
     public void sendStopTransactionRequest(Integer meterStop, long id) {
         String value = mockChargingSessionServices.findByCurrMeterValue(id);
-        mockChargingSessionServices.setMeterStop( id , meterStop);
+        mockChargingSessionServices.setMeterStop(id, meterStop);
         StopTransactionRequest request =
                 core.createStopTransactionRequest(Integer.parseInt(value), ZonedDateTime.now(), Math.toIntExact(id));
         send(request);
+        ocppLoggerService.sendStopTransactionRequestLogger(id);
     }
 
     public void sendMeterValuesRequest(Integer connectorId, String meterValue, String idTag) {
         MeterValuesRequest request = core.createMeterValuesRequest(connectorId, ZonedDateTime.now(), meterValue);
         request.setTransactionId(Integer.valueOf(idTag));
         send(request);
+        //ocppLoggerService.meterValueLog(connectorId,idTag,meterValue);
     }
 
 

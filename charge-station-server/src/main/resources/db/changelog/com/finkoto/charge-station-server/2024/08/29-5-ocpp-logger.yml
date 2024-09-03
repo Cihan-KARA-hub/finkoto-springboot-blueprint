@@ -40,4 +40,4 @@ databaseChangeLog:
                   type: varchar(20)
               - column:
                  name: info
-                 type: varchar(50)
+                 type: varchar(100)

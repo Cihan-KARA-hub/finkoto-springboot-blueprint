@@ -8,6 +8,7 @@ import com.finkoto.ocppmockserver.server.FakeChargePoint;
 import com.finkoto.ocppmockserver.services.MockChargePointServices;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
 import com.finkoto.ocppmockserver.services.MockConnectorServices;
+import com.finkoto.ocppmockserver.services.OcppLoggerService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,22 +25,24 @@ public class JsonClientImpl {
     private final MockChargingSessionServices mockChargingSessionServices;
     private final MockConnectorServices mockConnectorServices;
     private final MockChargePointServices mockChargePointServices;
+    private final OcppLoggerService ocppLoggerService;
     private final Map<String, FakeChargePoint> connections = new HashMap<>();
     private List<ChargePoint> chargePointsLostList = new ArrayList<>();
 
     @Value("${websocket.url}")
     private String webSocketUrl;
 
-    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, MockChargePointServices mockChargePointServices) {
+    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, MockChargePointServices mockChargePointServices,OcppLoggerService ocppLoggerService) {
         this.mockChargingSessionServices = mockChargingSessionServices;
         this.mockConnectorServices = mockConnectorServices;
         this.mockChargePointServices = mockChargePointServices;
+        this.ocppLoggerService = ocppLoggerService;
     }
 
     @PostConstruct
     public void startServer() {
         mockChargePointServices.findAll().forEach(chargePoint -> {
-            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices);
+            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices,ocppLoggerService);
             fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
 
             connections.put(chargePoint.getOcppId(), fakeChargePoint);

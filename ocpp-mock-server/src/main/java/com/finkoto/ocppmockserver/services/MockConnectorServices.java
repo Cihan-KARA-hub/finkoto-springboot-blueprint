@@ -115,7 +115,7 @@ public class MockConnectorServices {
     @Transactional
     public String getChargePointId(Integer connectorId) {
         Optional<Connector> idx = mockConnectorRepository.findById(Long.valueOf(connectorId));
-        ChargePoint connector = idx.get().getChargePoint();
-        return connector.getId().toString();
+        ChargePoint chargePoint = idx.get().getChargePoint();
+        return chargePoint.getId().toString();
     }
 }

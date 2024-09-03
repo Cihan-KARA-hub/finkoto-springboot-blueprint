@@ -46,7 +46,7 @@ public class OcppLogger {
     @Column(name = "charging_session_id", length = 20)
     private String chargingSessionId;
 
-    @Column(name = "info", length = 50)
+    @Column(name = "info", length = 100)
     private String info;
 
 }

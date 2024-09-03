@@ -9,5 +9,6 @@ public enum ConnectorStatus {
     Finishing,
     Reserved,
     Unavailable,
-    Faulted
+    Faulted,
+    Finished
 }

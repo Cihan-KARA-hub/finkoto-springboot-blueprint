@@ -2,6 +2,7 @@ package com.finkoto.chargestation.api.controller;
 
 import com.finkoto.chargestation.api.dto.ChargingSessionDto;
 import com.finkoto.chargestation.api.dto.PageableResponseDto;
+import com.finkoto.chargestation.model.ChargingSession;
 import com.finkoto.chargestation.services.ChargingSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.extensions.Extension;
@@ -23,6 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 
 @RequiredArgsConstructor
@@ -171,7 +174,7 @@ public class ChargingSessionController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ChargingSessionDto> getChargeSessionsById(@Valid @PathVariable Long id) {
+    public ResponseEntity<Optional<ChargingSession>> getChargeSessionsById(@Valid @PathVariable Long id) {
         return ResponseEntity.ok(chargingSessionService.findById(id));
     }
 
