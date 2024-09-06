@@ -40,13 +40,14 @@ public class OcppLoggerService {
     @Transactional
     public void handleStartTransactionRequestLogger(StartTransactionRequest request) {
         OcppLogger logger = new OcppLogger();
-        Integer connectorId = request.getConnectorId();
-        String byChargePointId = connectorService.getChargePointId(connectorId);
-        logger.setChargePointOcppId(byChargePointId);
-        logger.setConnectorOcppId(request.getConnectorId().toString());
-        logger.setChargingSessionId(request.getIdTag());
-        logger.setInfo("Start (handle start transaction request) " + logger.getChargePointOcppId());
-        ocppLoggerRepository.save(logger);
+        chargingSessionService.findById(Long.parseLong(request.getIdTag())).ifPresent(session -> {
+            logger.setChargePointOcppId(session.getChargePointOcppId());
+            logger.setConnectorOcppId(request.getConnectorId().toString());
+            logger.setChargingSessionId(request.getIdTag());
+            logger.setInfo("Start (handle start transaction request) " + logger.getChargePointOcppId());
+            ocppLoggerRepository.save(logger);
+        });
+
     }
 
     @Transactional

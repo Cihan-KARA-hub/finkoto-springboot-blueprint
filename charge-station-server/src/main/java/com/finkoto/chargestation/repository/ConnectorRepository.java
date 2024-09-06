@@ -12,8 +12,8 @@ import java.util.Optional;
 @Repository
 public interface ConnectorRepository extends JpaRepository<Connector, Long> {
     Page<Connector> findAllByChargePointId(Pageable pageable, Long chargePointId);
-    Optional<Connector> findByIdAndOcppId(Long id, int ocppId);
+    Optional<Connector> findByOcppIdAndChargePoint_OcppId(int id, String ocppId);
 
-    Optional<Connector> findById(Long chargePointId);
+    Optional<Connector> findByOcppId(int connectorOcppId);
 
 }

@@ -2,6 +2,7 @@ package com.finkoto.chargestation.ocpp;
 
 
 import com.finkoto.chargestation.model.ChargingSession;
+import com.finkoto.chargestation.model.enums.ConnectorStatus;
 import com.finkoto.chargestation.services.ChargePointService;
 import com.finkoto.chargestation.services.ChargingSessionService;
 import com.finkoto.chargestation.services.ConnectorService;
@@ -173,22 +174,19 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         return new MeterValuesConfirmation();
     }
 
-    //log kaydedildi
+
     @Override
     public StartTransactionConfirmation handleStartTransactionRequest(UUID sessionIndex, StartTransactionRequest request) {
         log.info(request.toString());
-        request.getIdTag();
-        //idtag veritabanını kayıt et
-
-        connectorService.statusStartUpdate(request.getConnectorId());
+        connectorService.updateConnectorStatus(request.getIdTag(), ConnectorStatus.Charging);
         ocppLoggerService.handleStartTransactionRequestLogger(request);
-        return chargingSessionService.findNewChargingSession(request.getConnectorId(),request.getIdTag());
+        return chargingSessionService.findNewChargingSession(Integer.parseInt(request.getIdTag()));
     }
 
     @Override
     public StatusNotificationConfirmation handleStatusNotificationRequest(UUID sessionIndex, StatusNotificationRequest request) {
         log.info(String.valueOf(request));
-        connectorService.handleStatusNotificationUpdate(request.getStatus(), request.getConnectorId());
+       // connectorService.handleStatusNotificationUpdate(request.getStatus(), request.getConnectorId());
         return new StatusNotificationConfirmation();
     }
 
@@ -205,7 +203,7 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         final IdTagInfo idTagInfo = new IdTagInfo(AuthorizationStatus.Accepted);
         StopTransactionConfirmation confirmation = new StopTransactionConfirmation();
         confirmation.setIdTagInfo(idTagInfo);
-        connectorService.statusStopUpdate(optional.get().getConnectorId());
+        connectorService.updateConnectorStatus(request.getTransactionId().toString(), ConnectorStatus.Available);
         ocppLoggerService.handleStopTransactionRequestLogger(request);
         return confirmation;
     }
@@ -243,19 +241,17 @@ public class OCPPCentralSystem implements ServerCoreEventHandler {
         send(ocppId, request);
     }
 
-    //log kaydedildi
-    public void sendRemoteStartTransactionRequest(Long connectorId, int ocppId) {
 
-        ChargingSession chargingSession = chargingSessionService.newChargingSession(connectorId, ocppId);
+    public void sendRemoteStartTransactionRequest(int connectorOcppId, String chargePointOcppId) {
+        ChargingSession chargingSession = chargingSessionService.newChargingSession(connectorOcppId, chargePointOcppId);
         final RemoteStartTransactionRequest request = new RemoteStartTransactionRequest(chargingSession.getId().toString());
-        request.setConnectorId(Math.toIntExact(connectorId));
-
-        send(String.valueOf(ocppId), request).whenComplete((confirmation, throwable) -> {
+        request.setConnectorId(connectorOcppId);
+        send(chargePointOcppId, request).whenComplete((confirmation, throwable) -> {
             if (throwable != null) {
-                log.error("Remote start transaction failed for charge point: {}", ocppId, throwable);
+                log.error("Remote start transaction failed for charge point: {}", chargePointOcppId, throwable);
             } else {
                 ocppLoggerService.sendRemoteStartTransactionRequestLogger(chargingSession.getId());
-                log.info("Remote start transaction successful for charge point: {}", ocppId);
+                log.info("Remote start transaction successful for charge point: {}", chargePointOcppId);
             }
         });
 

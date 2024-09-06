@@ -24,6 +24,7 @@ public class ConnectorService {
     private final ConnectorRepository connectorRepository;
     private final ConnectorMapper connectorMapper;
     private final ChargePointRepository chargePointRepository;
+    private final ChargingSessionService chargingSessionService;
 
 
     @Transactional
@@ -78,35 +79,13 @@ public class ConnectorService {
 
 
     @Transactional
-    public void statusStartUpdate(int id) {
-        Long idx = (long) id;
-        Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
-        if (connector.getStatus() == ConnectorStatus.Finishing || connector.getStatus() == ConnectorStatus.Available || connector.getStatus() == ConnectorStatus.Preparing) {
-            connector.setStatus(ConnectorStatus.Charging);
-            connectorRepository.save(connector);
-        }
-    }
+    public void updateConnectorStatus(String chargingSessionId, ConnectorStatus status) {
 
-    @Transactional
-    public boolean statusStopUpdate(int id) {
-        Long idx = (long) id;
-        Connector connector = connectorRepository.findById(idx).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id));
-        if (connector.getStatus() == ConnectorStatus.Charging) {
-            connector.setStatus(ConnectorStatus.Available);
+        chargingSessionService.findById(Long.parseLong(chargingSessionId)).flatMap(session ->
+                connectorRepository.findByOcppIdAndChargePoint_OcppId(session.getConnectorId(), session.getChargePointOcppId())).ifPresent(connector ->
+        {
+            connector.setStatus(status);
             connectorRepository.save(connector);
-            return true;
-        } else {
-            connector.setStatus(ConnectorStatus.Faulted);
-            connectorRepository.save(connector);
-            return false;
-        }
+        });
     }
-
-    @Transactional
-    public String getChargePointId(Integer connectorId) {
-        Optional<Connector> idx = connectorRepository.findById(Long.valueOf(connectorId));
-        ChargePoint connector = idx.get().getChargePoint();
-        return connector.getId().toString();
-    }
-
 }

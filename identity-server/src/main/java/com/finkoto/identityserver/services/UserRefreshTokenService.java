@@ -36,8 +36,8 @@ public class UserRefreshTokenService {
     public TokenResponseDto getUserToken(String username, String password) {
         Map<String, String> body = new HashMap<>();
         body.put("client_id", "blueprint-springboot");
-        body.put("username", "cihan2");
-        body.put("password", "123456");
+        body.put("username", username);
+        body.put("password",password);
         body.put("grant_type", "password");
         return keycloakUserClient.token(body);
     }

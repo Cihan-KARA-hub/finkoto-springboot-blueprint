@@ -40,7 +40,6 @@ public class ChargePointService {
         chargePointRepository.save(newChargePoint);
     }
 
-
     @Transactional
     public ChargePointDto update(Long id, ChargePointDto chargePointDto) {
         final ChargePoint chargePoint = chargePointRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id: " + id + " not found."));
@@ -88,7 +87,6 @@ public class ChargePointService {
         }
     }
 
-    //Online charge pointlerin ocppId'lerini listeler
     public List<String> onlineOcppIdList() {
         List<String> ocppIdList = new ArrayList<>();
         final List<ChargePoint> chargePointsList = chargePointRepository.findByOnline(true);

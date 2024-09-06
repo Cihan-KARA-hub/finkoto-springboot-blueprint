@@ -32,7 +32,7 @@ public class JsonClientImpl {
     @Value("${websocket.url}")
     private String webSocketUrl;
 
-    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, MockChargePointServices mockChargePointServices,OcppLoggerService ocppLoggerService) {
+    public JsonClientImpl(MockChargingSessionServices mockChargingSessionServices, MockConnectorServices mockConnectorServices, MockChargePointServices mockChargePointServices, OcppLoggerService ocppLoggerService) {
         this.mockChargingSessionServices = mockChargingSessionServices;
         this.mockConnectorServices = mockConnectorServices;
         this.mockChargePointServices = mockChargePointServices;
@@ -42,7 +42,7 @@ public class JsonClientImpl {
     @PostConstruct
     public void startServer() {
         mockChargePointServices.findAll().forEach(chargePoint -> {
-            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices,ocppLoggerService);
+            FakeChargePoint fakeChargePoint = new FakeChargePoint(chargePoint.getOcppId(), mockChargingSessionServices, mockConnectorServices, ocppLoggerService);
             fakeChargePoint.connect(chargePoint.getOcppId(), webSocketUrl);
 
             connections.put(chargePoint.getOcppId(), fakeChargePoint);
@@ -70,18 +70,17 @@ public class JsonClientImpl {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.NEW);
         for (MockChargingSession session : sessions) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Preparing);
-                //TODO delay atılabilir mi?
+                mockConnectorServices.updateStatus(session.getConnectorId(), session.getChargePointOcppId(), ConnectorStatus.Preparing);
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
-                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+                        fakeChargePoint.sendStatusNotificationRequest(session.getConnectorId(), session.getChargePointOcppId()));
             }).thenRunAsync(() -> {
                 mockChargingSessionServices.activateNewChargingSession(session.getId());
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
                         fakeChargePoint.sendStartTransactionRequest(session.getConnectorId(), session.getIdTag(), session.getMeterStart()));
             }).thenRunAsync(() -> {
-                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Charging);
+                mockConnectorServices.updateStatus(session.getConnectorId(), session.getChargePointOcppId(), ConnectorStatus.Charging);
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
-                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+                        fakeChargePoint.sendStatusNotificationRequest(session.getConnectorId(), session.getChargePointOcppId()));
             }).exceptionally(ex -> {
                 log.error("Error in startTransactionScheduler", ex);
                 return null;
@@ -95,17 +94,17 @@ public class JsonClientImpl {
         List<MockChargingSession> sessions = mockChargingSessionServices.findByStatus(SessionStatus.FINISHING);
         for (MockChargingSession session : sessions) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Finishing);
+                mockConnectorServices.updateStatus(session.getConnectorId(), session.getChargePointOcppId(), ConnectorStatus.Finishing);
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
-                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+                        fakeChargePoint.sendStatusNotificationRequest(session.getConnectorId(), session.getChargePointOcppId()));
             }).thenRunAsync(() -> {
                 mockChargingSessionServices.sendStopTransactionRequest(session.getId());
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
                         fakeChargePoint.sendStopTransactionRequest(session.getMeterStop(), session.getId()));
             }).thenRunAsync(() -> {
-                mockConnectorServices.updateStatus(session.getConnectorId(), ConnectorStatus.Available);
+                mockConnectorServices.updateStatus(session.getConnectorId(), session.getChargePointOcppId(), ConnectorStatus.Available);
                 getFakeChargePoint(session.getChargePointOcppId()).ifPresent(fakeChargePoint ->
-                        fakeChargePoint.sendStatusNotificationRequest(session.getId()));
+                        fakeChargePoint.sendStatusNotificationRequest(session.getConnectorId(), session.getChargePointOcppId()));
             });
         }
     }
@@ -121,9 +120,6 @@ public class JsonClientImpl {
     }
 
 
-    /**
-     * TODO  online olmayanları al  ve bir listede tut 5 dakikada bir  baglanmaya çalışsın
-     */
     @Scheduled(fixedRate = 50000)
     public void reconnetScheduler() {
         chargePointsLostList = mockChargePointServices.findByOnline(false);

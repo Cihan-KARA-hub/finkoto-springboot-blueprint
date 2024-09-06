@@ -36,13 +36,12 @@ public class OcppLoggerService {
     @Transactional
     public void handleRemoteStartTransactionRequestLogger(RemoteStartTransactionRequest request) {
         OcppLogger logger = new OcppLogger();
-        String cpId = connectorService.getChargePointId(request.getConnectorId());
         List<MockChargingSession> sessionId = mockChargingSessionServices.findByConnectorId(request.getConnectorId());
         for (MockChargingSession session : sessionId) {
             if (session.getStatus() == SessionStatus.NEW) {
                 logger.setConnectorOcppId(request.getConnectorId().toString());
                 logger.setChargingSessionId(session.getId().toString());
-                logger.setChargePointOcppId(cpId);
+              //  logger.setChargePointOcppId(cpId);
                 logger.setInfo("Start new charge sessions (handle remote start transaction) {}" + request.getConnectorId());
                 ocppLoggerRepository.save(logger);
             }
@@ -51,24 +50,29 @@ public class OcppLoggerService {
     }
 
     @Transactional
-    public void sendStartTransactionRequestLogger(int connectorId, String idTag) {
+    public void sendStartTransactionRequestLogger(int connectorId, Long idTag) {
         OcppLogger logger = new OcppLogger();
-        String cpId = connectorService.getChargePointId(connectorId);
-        logger.setChargePointOcppId(cpId);
-        logger.setConnectorOcppId(String.valueOf(connectorId));
-        logger.setChargingSessionId(idTag);
-        logger.setInfo("Start new charge sessions (send start transaction) {}" + idTag);
+        mockChargingSessionServices.findById(idTag).ifPresent(mockChargingSession -> {
+            logger.setChargePointOcppId(mockChargingSession.getChargePointOcppId());
+            logger.setConnectorOcppId(String.valueOf(connectorId));
+            logger.setChargingSessionId(String.valueOf(idTag));
+            logger.setInfo("Start new charge sessions (send start transaction) {}" + idTag);
+            ocppLoggerRepository.save(logger);
+        });
+
+
     }
 
     @Transactional
-    public void meterValueLog(int connectorId, String idTag, String meterValue) {
+    public void meterValueLog(int connectorId, Long idTag, String meterValue) {
         OcppLogger logger = new OcppLogger();
-        String cpId = connectorService.getChargePointId(connectorId);
-        logger.setChargePointOcppId(cpId);
-        logger.setConnectorOcppId(String.valueOf(connectorId));
-        logger.setChargingSessionId(idTag);
-        logger.setInfo("Start new meter values (meter) {}" + meterValue);
-        ocppLoggerRepository.save(logger);
+        mockChargingSessionServices.findById(idTag).ifPresent(mockChargingSession -> {
+            logger.setChargePointOcppId(mockChargingSession.getChargePointOcppId());
+            logger.setConnectorOcppId(String.valueOf(connectorId));
+            logger.setChargingSessionId(String.valueOf(idTag));
+            logger.setInfo("Start new meter values (meter) {}" + meterValue);
+            ocppLoggerRepository.save(logger);
+        });
     }
 
     @Transactional

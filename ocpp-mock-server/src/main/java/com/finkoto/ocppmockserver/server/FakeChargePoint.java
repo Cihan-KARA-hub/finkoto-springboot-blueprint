@@ -2,7 +2,6 @@ package com.finkoto.ocppmockserver.server;
 
 import com.finkoto.ocppmockserver.model.ChargeHardwareSpec;
 import com.finkoto.ocppmockserver.model.Connector;
-import com.finkoto.ocppmockserver.model.enums.ConnectorStatus;
 import com.finkoto.ocppmockserver.services.MockChargingSessionServices;
 import com.finkoto.ocppmockserver.services.MockConnectorServices;
 import com.finkoto.ocppmockserver.services.OcppLoggerService;
@@ -59,7 +58,6 @@ public class FakeChargePoint {
                             public ChangeAvailabilityConfirmation handleChangeAvailabilityRequest(
                                     ChangeAvailabilityRequest request) {
                                 receivedRequest = request;
-                                mockConnectorServices.updateStatus(request.getConnectorId(), ConnectorStatus.Available);
                                 return new ChangeAvailabilityConfirmation(AvailabilityStatus.Accepted);
                             }
 
@@ -331,7 +329,7 @@ public class FakeChargePoint {
         Request request = core.createStartTransactionRequest(connectorId, idTag, meterStart, ZonedDateTime.now());
         send(request);
         if (connectorId != null && idTag != null) {
-            ocppLoggerService.sendStartTransactionRequestLogger(connectorId, idTag);
+            ocppLoggerService.sendStartTransactionRequestLogger(connectorId, Long.valueOf(idTag));
         }
 
     }
@@ -365,12 +363,12 @@ public class FakeChargePoint {
         }
     }
 
-    public void sendStatusNotificationRequest(Long id) {
-        Optional<Connector> mockConnector = mockConnectorServices.findByIdConnector(id);
+    public void sendStatusNotificationRequest(int connectorOcppId, String chargePointOcppId) {
+        Optional<Connector> mockConnector = mockConnectorServices.findByOcppIdAndChargePointOcppId(connectorOcppId, chargePointOcppId);
         mockConnector.ifPresent(connector -> {
             try {
                 ChargePointStatus chargePointStatus = ChargePointStatus.valueOf(connector.getStatus().name());
-                StatusNotificationRequest request = core.createStatusNotificationRequest(Math.toIntExact(connector.getId()), ChargePointErrorCode.NoError, chargePointStatus);
+                StatusNotificationRequest request = core.createStatusNotificationRequest(connectorOcppId, ChargePointErrorCode.NoError, chargePointStatus);
                 send(request);
             } catch (Exception ex) {
                 ex.printStackTrace();

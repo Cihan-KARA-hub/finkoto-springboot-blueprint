@@ -25,14 +25,14 @@ public class MockChargingSessionServices {
     }
 
     @Transactional
-    public RemoteStartStopStatus handleRemoteStartTransactionRequest(String chargePointOcppId, int connectorId, String idTag) {
-        Optional<MockChargingSession> session = mockChargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndStatus(chargePointOcppId, connectorId, SessionStatus.ACTIVE);
+    public RemoteStartStopStatus handleRemoteStartTransactionRequest(String chargePointOcppId, int connectorOcppId, String idTag) {
+        Optional<MockChargingSession> session = mockChargingSessionRepository.findByChargePointOcppIdAndConnectorIdAndStatus(chargePointOcppId, connectorOcppId, SessionStatus.ACTIVE);
         if (session.isPresent()) {
             return RemoteStartStopStatus.Rejected;
         } else {
             MockChargingSession mockChargingSession = new MockChargingSession();
             mockChargingSession.setStatus(SessionStatus.NEW);
-            mockChargingSession.setConnectorId(connectorId);
+            mockChargingSession.setConnectorId(connectorOcppId);
             mockChargingSession.setIdTag(idTag);
             mockChargingSession.setChargePointOcppId(chargePointOcppId);
             mockChargingSessionRepository.save(mockChargingSession);
@@ -76,14 +76,12 @@ public class MockChargingSessionServices {
 
     @Transactional
     public void sendStopTransactionRequest(Long id) {
-        // TODO .orElseThrove ekleyelim.
         final Optional<MockChargingSession> optional = mockChargingSessionRepository.findById(id);
         final MockChargingSession mockChargingSession = optional.get();
         mockChargingSession.setStatus(SessionStatus.FINISHED);
         mockChargingSession.setEndTime(OffsetDateTime.now());
         mockChargingSession.setMeterStop(Integer.valueOf(mockChargingSession.getCurrMeter()));
         mockChargingSessionRepository.save(mockChargingSession);
-
     }
 
     public String findByCurrMeterValue(long id) {
@@ -101,7 +99,6 @@ public class MockChargingSessionServices {
     public List<MockChargingSession> findByConnectorId(Integer connectorId) {
         return mockChargingSessionRepository.findByConnectorId(connectorId);
     }
-
 
     public void setMeterStop(long id, Integer meterStop) {
         final Optional<MockChargingSession> optional = Optional.ofNullable(mockChargingSessionRepository.findById(id).orElse(null));

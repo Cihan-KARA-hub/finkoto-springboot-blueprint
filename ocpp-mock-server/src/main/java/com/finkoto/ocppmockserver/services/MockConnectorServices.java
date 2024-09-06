@@ -53,8 +53,8 @@ public class MockConnectorServices {
     }
 
     @Transactional
-    public Optional<Connector> findByIdConnector(Long id) {
-        return mockConnectorRepository.findById(id);
+    public Optional<Connector> findByOcppIdAndChargePointOcppId(int ocppId, String chargePointOcppId) {
+        return mockConnectorRepository.findByOcppIdAndChargePoint_OcppId(ocppId,chargePointOcppId);
     }
 
     @Transactional
@@ -106,16 +106,20 @@ public class MockConnectorServices {
         }
     }
 
-    public void updateStatus(int id, ConnectorStatus connectorStatus) {
-        Optional<Connector> connector = Optional.ofNullable(mockConnectorRepository.findById((long) id).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + id)));
-        connector.get().setStatus(connectorStatus);
-        mockConnectorRepository.save(connector.get());
+    public void updateStatus(int connectorOcppId,String chargePointOcppId, ConnectorStatus connectorStatus) {
+        Optional<Connector> connector = Optional.ofNullable(mockConnectorRepository.findByOcppIdAndChargePoint_OcppId(connectorOcppId,chargePointOcppId).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + connectorOcppId)));
+        connector.ifPresent(c -> {
+            c.setStatus(connectorStatus);
+            mockConnectorRepository.save(c);
+        });
+
     }
 
+
     @Transactional
-    public String getChargePointId(Integer connectorId) {
-        Optional<Connector> idx = mockConnectorRepository.findById(Long.valueOf(connectorId));
-        ChargePoint chargePoint = idx.get().getChargePoint();
-        return chargePoint.getId().toString();
+    public String getChargePointOcppId(int connectorOcppId ,String chargePointOcppId) {
+        Connector connector = mockConnectorRepository.findByOcppIdAndChargePoint_OcppId(connectorOcppId,chargePointOcppId).orElseThrow(() -> new IllegalStateException("Connector not found with id: " + connectorOcppId));
+        return connector.getChargePoint().getOcppId();
+
     }
 }

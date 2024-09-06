@@ -322,8 +322,8 @@ public class ChargingSessionController {
     })
     //TODO  burda bir token verilecek
     @PostMapping("/start")
-    public ResponseEntity<Void> start(@Valid @RequestParam int ocppId, @RequestParam Long connectorId) {
-        Exception check = chargingSessionService.sendRemoteStartTransactionRequest(connectorId, ocppId);
+    public ResponseEntity<Void> start(@Valid @RequestParam String chargePointOcppId, @RequestParam int connectorOcppId) {
+        Exception check = chargingSessionService.sendRemoteStartTransactionRequest(connectorOcppId, chargePointOcppId);
         if (check != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         } else {

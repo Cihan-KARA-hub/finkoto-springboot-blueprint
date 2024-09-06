@@ -44,14 +44,11 @@ public class SecurityConfig {
                         .requestMatchers(IdentityConstant.SWAGGER_PATH_WHITELIST).permitAll()
                         .requestMatchers(publicPaths).permitAll()
                         .anyRequest().authenticated())
-
-
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
         return http.build();
     }
 
