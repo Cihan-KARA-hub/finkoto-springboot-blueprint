@@ -1,0 +1,8 @@
+
+cloud:
+  gateway:
+    routes:
+      - id: router
+        uri: http://localhost:8088
+
+

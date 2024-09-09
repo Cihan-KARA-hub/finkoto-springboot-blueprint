@@ -42,7 +42,7 @@ import java.util.concurrent.CompletionStage;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OCPPCentralSystem implements ServerCoreEventHandler {
+    public class OCPPCentralSystem implements ServerCoreEventHandler {
     private final Map<UUID, String> sessions = new HashMap<>();
     private ChargingSessionService chargingSessionService;
     private ChargePointService chargePointService;

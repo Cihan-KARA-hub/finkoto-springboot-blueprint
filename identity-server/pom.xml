@@ -6,7 +6,6 @@
         <groupId>com.finkoto</groupId>
         <artifactId>spring-microservices-blueprint</artifactId>
         <version>1.0.0</version>
-
     </parent>
     <artifactId>identity-server</artifactId>
     <version>1.0.0</version>
