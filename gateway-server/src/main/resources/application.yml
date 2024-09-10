@@ -1,24 +1,21 @@
 spring:
+
   application:
     name: gateway-server
   cloud:
     gateway:
-      mvc:
-        routes:
-          - id: charge-station-server
-            uri: http://localhost:8086
-            predicates:
-              - Path=/charge-station/**
-          - id: identity-server
-            uri: http://localhost:8085
-            predicates:
-              - Path=/identity/**
-          - id: occp-mock-server
-            uri: http://localhost:8087
-            predicates:
-              - Path=/ocpp-mock-server/**
+      routes:
+       - id: charge-station-server
+         uri: http://localhost:8086
+         predicates:
+           - Path=/charge-station/**
+       - id: identity-server
+         uri: http://localhost:8085
+         predicates:
+           - Path=/identity/**
+       - id: occp-mock-server
+         uri: http://localhost:8087
+         predicates:
+           - Path=/ocpp-mock-server/**
 server:
   port: 8088
-
-
-

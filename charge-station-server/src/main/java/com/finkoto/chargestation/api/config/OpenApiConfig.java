@@ -44,7 +44,6 @@ public class OpenApiConfig {
     public GroupedOpenApi version1() {
         return GroupedOpenApi.builder()
                 .group(" Charge Station Server Rest API v1.0")
-                .pathsToMatch("/csm/v1/charge-points/**","/csm/v1/charge-connector/**","/csm/v1/HardwareSpec-connector","/csm/v1/charging-sessions/**")
                 .addOpenApiCustomizer(setDocumentation("1.0"))
                 .build();
     }
